@@ -1,0 +1,4 @@
+バージョン 1.0a
+更新日 2016年7月18日
+
+※Walls Developer Helpの内容はWalls Luxor(Build 6000)開発段階のものです。

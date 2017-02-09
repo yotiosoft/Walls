@@ -1,0 +1,4 @@
+mode : 全画面表示か、ウィンドウ表示かを指定します。\nfullscreenで全画面、windowでウィンドウ表示となります。\n設定はコントロールパネルで行えますが、config.datの内容を直接書き換えて\n設定を変更することも可能です。\n\n主に使われるラベル;*start_upなど[scx(h),scy(h),*start_up(l)]
+laguage:言語の設定に使います。\n文字を表示する際に使うol関数内で主に使われます。[ltext(h),the_text(h),ol(k)]
+address:エクスプローラー上のアドレスを指定する変数です。\n起動時はComputer;/になっています。\n各ファイルのアドレスはdiskフォルダのdisk.wdiskに記述されています。\n\n主に使われるラベル;*explorer、*explorer_jumpなど[address2(h),disk(h),the_folder(h),the_address(h),foldername(h),foldericon(h),files(h),filename(h),order(h),fileicon(h),insp_order(h),*explorer(l),*explorer_jump(l)]
+address:エクスプローラー上のアドレスを指定する変数です。\n起動時はComputer;/になっています。\n実際のComputer:/のディレクトリはsystem/computer/にあります。\n\n主に使われるラベル;*explorer、*explorer_jumpなど[address2(h),disk(h),the_folder(h),the_address(h),foldername(h),foldericon(h),files(h),filename(h),order(h),fileicon(h),insp_order(h),*explorer(l),*explorer_jump(l)]

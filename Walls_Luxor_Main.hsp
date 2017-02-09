@@ -1,0 +1,403 @@
+/*--------------------------------------------------------------------------------------------------
+
+										Walls Luxor Main Source
+	
+											Version RM 6.0
+
+--------------------------------------------------------------------------------------------------*/
+
+*start_up
+	/*変数の初期化*/
+		mode="window"								; 表示モード
+		language="jp"								; 表示言語
+		address="Computer:/"						; エクスプローラーの初期ディレクトリ（Computer:/はSystem/Computerに相当）
+		systemfont="Yu Gothic UI"					; フォント
+		now_sourcecode = "Walls Luxor Main.hsp"		; 現在読み込んでいるソースコード
+	
+		user_icon_num = 3							; ユーザーアイコンのバッファ番号
+		wallpaper_sizeX = 1024
+		wallpaper_sizeY = 576
+	
+	/*バージョン情報の読み込み*/
+		notesel about_walls
+		noteload "System/Computer/C/walls/about/about.wal"
+		noteget about_walls_title, 0
+	
+	/*タイトル表示*/
+		title about_walls_title
+	
+	/*表示モード適用*/
+		if mode="fullscreen"{								; フルスクリーンモード
+			scx=ginfo(20)										; スクリーン全体の解像度x
+			scy=ginfo(21)										; スクリーン全体の解像度y
+			chgdisp 1,scx,scy									; 全画面化
+			bgscr 0,scx,scy,,0,0 : phwnd.0 = hwnd				; 親ウィンドウ作成
+		}else{												; ウィンドウモード
+			scx=1024											; スクリーン全体の解像度x
+			scy=576												; スクリーン全体の解像度y
+			screen 0,1024,576 : phwnd.0 = hwnd					;親ウィンドウ作成
+		}
+	
+*dll
+/*DLLの読み込み*/
+#uselib "user32.dll"
+	#func SetParentA "SetParent" int,int					;親子ウィンドウの作成に使う
+	#cfunc WindowFromPointA "WindowFromPoint" int, int		;ウィンドウを動かすときに使う
+	
+	#func GetWindowLongA2 "GetWindowLongA" int , int 											;入力ボックスの色を変更するときに使う
+	#func SetWindowLongA2 "SetWindowLongA" int , int , int 										
+	#func SetLayeredA "SetLayeredWindowAttributes" int , int , int , int 						
+	#func SetWindowPosA "SetWindowPos" int, nullptr, nullptr, nullptr, nullptr, nullptr, int	
+	
+	#func SetTimerA  "SetTimer"  int, int, int, int			;ウィンドウタイマーに使う
+	#func KillTimerA "KillTimer" int, int
+	#define WM_TIMER        0x0113
+	#define ID_TIMER        1
+		
+#uselib "HSPThread.dll"
+	#func HSPCreateThread "HSPCreateThread" int,str,int,int,int,int,int
+	
+*modules
+/*関数の登録↓*/
+#module
+
+/*他の言語に変換する関数（使用例：ol("文章"））*/
+#defcfunc ol str ltext
+	if language@="en"{										
+		notesel en : noteload"data/language/en.lf"
+		the_text0 = instr(en,0,ltext)
+	
+		if the_text0=-1{													;文章がなかった場合戻る
+			return ltext
+		}
+		
+		the_text0 = strmid( en, the_text0, instr(en,the_text0,";") )
+		split the_text0,":",a,the_text
+		return the_text
+	}
+	if language@="on"{										
+		notesel en : noteload"data/language/on.lf"
+		the_text0 = instr(en,0,ltext)
+	
+		if the_text0=-1{													;文章がなかった場合戻る
+			return ltext
+		}
+		
+		the_text0 = strmid( en, the_text0, instr(en,the_text0,";") )
+		split the_text0,":",a,the_text
+		return the_text
+	}
+	if language@="jp"{														;日本語が設定されている場合そのまま変えずにもどる
+		return ltext
+	}
+	
+/*指定された範囲内にマウスがあるか確認する関数（使用例：click_range (100, 0, 300, 300) ）*/
+#defcfunc click_range int mx, int my, int mx2, int my2
+	if mx <= mousex and mx2 >= mousex and my <= mousey and my2 >= mousey {
+		return 1
+	}else{
+		return 0
+	}
+	
+/*新規命令の登録↓*/
+/*文字を中央に表示（使用例：cmes "hogehoge", 0, 640, 0, 480, 0）*/
+#deffunc cmes str ctext, int cx, int cy, int cx2, int cy2, int redraw_exist
+	#include "user32.as"
+	RECT = cx, cy, cx2, cy2
+	DrawText hdc, ctext, -1, varptr(RECT), $01
+	
+	if redraw_exist = 0 : redraw 1
+	return
+	
+/*画像をぼかす（hsp/sample/new/gblur.hsp | 使用例：gblur 2）*/
+#deffunc gblur int p1, int p2
+	gmode 3, ginfo_sx, ginfo_sy, 128
+	if (p2&1)=0 {
+		repeat p1
+		pos 1,0:gcopy ginfo(3)
+		pos 0,0:gcopy ginfo(3),2,0
+		loop
+	}
+	if (p2&2)=0 {
+		repeat p1
+		pos 0,1:gcopy ginfo(3)
+		pos 0,0:gcopy ginfo(3),0,2
+		loop
+	}
+	return
+	
+/*半透明色表示命令*/
+#deffunc boxfa int ax, int ay, int bx, int by
+	pdx = ax, bx, bx, ax
+	pdy = ay, ay, by, by
+	gsquare -1,pdx, pdy
+	return
+	
+#global
+	
+*boot
+	/*ここから起動画面*/
+		color 0,0,0 : boxf
+	
+		repeat 51
+			redraw 0
+			
+			color 0, 0,  : boxf
+			color 0, 100, 255
+			gmode 3,,,(cnt*5) : boxfa 0, 0, scx, scy
+		
+			redraw 1
+			await 10
+		loop
+	
+	rad = double(0.00)
+	
+	repeat
+		redraw 0
+	
+		rad += 0.05
+		
+		color 0, 162, 232
+		boxf cos(rad)*1024+1024, 0, scx, scy
+	
+		if cos(rad)*1024+1024 < 0.1 {
+			break
+		}
+	
+		redraw 1
+		await 10
+	loop
+	
+*boot_loading
+	gsel 0
+	
+	color 255,255,255
+	cmes "Loading...", 0, scy/2-10, scx, scy/2+10
+	
+	/*ここでファイルを読み込む*/
+	/*画像ファイル読み込み*/
+		#include "buffer.hsp"
+	
+*loading_registered_users
+	notesel registered_users
+	noteload "System/Computer/C/user/registered_users.wal"
+	
+	sdim registered_user, notemax
+	
+	repeat notemax
+		noteget registered_user(cnt), cnt
+	loop
+	
+*boot_after_loading
+	/*ここまでファイル読み込み*/		
+		rad = double(0.00)
+		
+		repeat
+			redraw 0
+		
+			rad += 0.05
+			
+			color 0, 100, 255
+			boxf cos(rad)*1024+1024, 0, scx, scy
+		
+			if cos(rad)*1024+1024 < 0.1 {
+				break
+			}
+		
+			redraw 1
+			await 10
+		loop
+	
+	/*Welcome!と表示させる*/
+		repeat 31
+			redraw 0
+		
+			color 0, 100, 255 : boxf
+		
+			font ""+systemfont+"",36
+			color double((255/155)*((cnt*5)*255/155)), 100+(cnt*5), 255 : cmes "Welcome!", 0, 240, 1024, 576
+		
+			redraw 1
+			await 5
+		loop
+		
+		wait 200
+		
+		repeat 31
+			redraw 0
+		
+			color 0, 100, 255 : boxf
+		
+			font ""+systemfont+"",36
+			color double((255/155)/(255-(cnt*5)*255/155)), 255-(cnt*5), 255 : cmes "Welcome!", 0, 240, 1024, 576
+		
+			redraw 1
+			await 1
+		loop
+	
+		color 0, 100, 255 : boxf
+		
+		wait 100
+	
+	/*ユーザー選択*/
+		rad = double(0.00)
+		
+		repeat
+			redraw 0
+		
+			color 0, 100, 255 : boxf
+		
+			rad += 0.05
+		
+			pos scx/2- 50, int(sin(rad)*(scy/2 - 100))
+			color 254, 254, 254 : gmode 4, 100, 100, 256
+			gcopy user_icon_num, 0, 0, 100, 100
+			
+			redraw 1
+		
+			if int(sin(rad)*(scy/2 - 50)) >= scy / 2 - 50 - 10 - 1 {
+				break
+			}
+		
+			await 10
+		loop
+	
+		//登録されたユーザーを表示（今のところregistered_user.walの一番上に記述されたユーザーのみ）
+		repeat 51
+			redraw 0
+		
+			color 0, 100, 255 : boxf 0, scy/2, scx, scy
+			
+			color cnt, 100+(0.6*(cnt*5)), 255 : font "Yu Gothic UI", 26
+			cmes registered_user(0), 0, scy/2 + 5, scx, scy/2 + 40
+		
+			redraw 1
+		
+			await 1
+		loop
+		
+		wait 200
+	
+*loadig_about_user
+	notesel user_config
+	noteload "System/Computer/C/user/"+registered_user(0)+"/config.wal"
+	
+	noteget user_Password, 1
+	noteget user_Icon_num, 3
+	noteget user_Wallpaper_num, 5
+	
+	user_Icon_num = int(user_Icon_num)+2
+	user_Wallpaper_num = int(user_Wallpaper_num)+12
+
+*login
+	/*ログイン画面*/
+		rad = double(0.00)
+		
+		repeat
+			redraw 0
+		
+			color 0, 100, 255 : boxf
+		
+			rad += 0.05
+		
+			pos scx/2 - 50, int(sin(rad)*50) + scy/2 - 100
+			color 254, 254, 254 : gmode 4, 100, 100, 256
+			gcopy user_icon_num, 0, 0, 100, 100
+			
+			redraw 1
+		
+			if int(sin(rad)*50) + scy/2 - 100 >= scy / 2 - 50 - 1 {
+				break
+			}
+		
+			await 10
+		loop
+		
+		rad = double(0.00)
+		
+		repeat
+			redraw 0
+		
+			rad += 0.05
+			
+			color 0, 100, 255 : boxf
+		
+			pos cos(rad)*(scx/4)+(scx/4) - 50, scy / 2 - 50 - 1
+			color 254, 254, 254 : gmode 4, 100, 100, 256
+			gcopy user_icon_num, 0, 0, 100, 100
+			
+			redraw 1
+		
+			if cos(rad)*(scx/4)+(scx/4) - 50 <= 100 {
+				break
+			}
+			
+			await 10
+		loop
+		
+		repeat 51
+			redraw 0
+		
+			buffer 998, scx, scy
+			color 0, 0, 0 : boxf
+			gzoom scx, scy, user_Wallpaper_num, 0, 0, 1024, 576
+			
+			gsel 0
+		
+			color 0, 100, 255 : boxf
+			
+			pos 0, 0 : gmode 3,,,(cnt*5) : gcopy 998, 0, 0, scx, scy
+		
+			color 0, 0, 0 : gmode 4,,,0.5*(cnt*5)
+			boxfa 100, scy/2 - 50, 450, scy/2 + 50
+		
+			pos cos(rad)*(scx/4)+(scx/4) - 50, scy / 2 - 50 - 1
+			color 254, 254, 254 : gmode 4, 100, 100, 256
+			gcopy user_icon_num, 0, 0, 100, 100
+		
+			redraw 1
+			
+			await 1
+		loop
+		
+		password = ""
+		
+		objsize 200, 20
+		pos 200, scy/2 - 10 : input password
+	
+		gmode 2
+		pos 405, scy/2 - 20 : gcopy 18, 0, 0, 40, 40
+	
+		onclick gosub *login_onclick
+	
+		stop
+	
+*login_onclick
+	/*→ボタンがクリックされたときの動作*/
+		if click_range (405, scy/2 - 20, 405 + 20, scy/2 + 20) = 1 {
+			if password = user_Password {
+				onclick 0
+				goto *desktop_screen	; デスクトップ画面へ
+			} else {
+				color 255, 255, 255 : font systemfont, 18
+				pos 200, scy/2 + 20 : mes "パスワードが間違っています"
+			}
+		}
+	
+	return
+	
+*desktop_screen
+	/*デスクトップ画面*/
+		clrobj
+	
+		redraw 0
+		
+	//壁紙表示
+		pos 0, 0 : gcopy user_Wallpaper_num, 0, 0, wallpaper_sizeX, wallpaper_sizeY
+	
+		redraw 1
+		stop
+	
+*exit
+	/*終了*/
+		end
