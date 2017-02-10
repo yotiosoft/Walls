@@ -1,0 +1,3 @@
+使用DLLについて
+hsp3imp.dll…hsp3imp.dllの著作権はonion software様にあります。このdllはHSPThread.dllで使用しています。詳しくはHSPLicense.txtをお読みください。
+HSPThread.dll…イノビア様が開発されたHSPで最大2つのマルチスレッドを動作させることができるとても優れたDLLです。こちらも再配布可能です。

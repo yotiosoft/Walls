@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-											Version RM 6.0
+									　Version RM 6.0 / Build 6001
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -127,11 +127,80 @@
 	return
 	
 /*半透明色表示命令*/
-#deffunc boxfa int ax, int ay, int bx, int by
+#deffunc sboxf int depth, int ax, int ay, int bx, int by
 	pdx = ax, bx, bx, ax
 	pdy = ay, ay, by, by
+	gmode 3,,,depth
 	gsquare -1,pdx, pdy
 	return
+	
+/*タスクバー表示*/
+#deffunc taskbar int ltx, int lty, int rbx, int rby
+	if displayed_taskbar@ = 0 {
+		//画面をバッファ
+			buffer 999, (rbx-ltx), (rby-lty)
+				pos 0, 0 : gcopy 0, ltx, lty, (rbx-ltx), (rby-lty)
+	
+		gsel 0
+		
+		rad = 0.00
+		
+		repeat
+			redraw 0
+			
+			gmode 0
+			pos ltx, lty : gcopy 999, 0, 0, (rbx-ltx), (rby-lty)
+			
+			rad += 0.05
+			sboxf@ 128, ltx, rby-(sin(rad)*(rby-lty)), rbx, rby
+	
+			if rby-(sin(rad)*(rby-lty)) = lty+1 {
+				gmode 0
+				pos ltx, lty : gcopy 999, 0, 0, (rbx-ltx), (rby-lty)
+				break
+			}
+	
+			redraw 1
+			wait 1
+		loop
+	}
+	
+	sboxf@ 128, ltx, lty, rbx, rby
+	
+	wait 10
+	
+	if displayed_taskbar@ = 0 {
+		rad = 1.00
+	
+		time = ""+gettime(4)+":"+gettime(5)+""
+	
+		repeat
+			redraw 0
+	
+			gmode 0
+			pos ltx, lty : gcopy 999, 0, 0, (rbx-ltx), (rby-lty)
+			
+			color 0, 0, 0
+			sboxf@ 128, ltx, lty, rbx, rby
+	
+			rad -= 0.05
+			color 255, 255, 255 : font ""+systemfont@+"", 16
+			pos rbx+70-cos(rad)*140, lty+5 : mes time
+	
+			if rbx+70-cos(rad)*140 = rbx-70+1 {
+				break
+			}
+	
+			redraw 1
+			wait 1
+		loop
+	}
+	
+	color 255, 255, 255 : font ""+systemfont@+"", 16
+	pos rbx-70, lty+5 : mes time
+	
+	return
+			
 	
 #global
 	
@@ -144,7 +213,7 @@
 			
 			color 0, 0,  : boxf
 			color 0, 100, 255
-			gmode 3,,,(cnt*5) : boxfa 0, 0, scx, scy
+			sboxf (cnt*5), 0, 0, scx, scy
 		
 			redraw 1
 			await 10
@@ -348,8 +417,8 @@
 			
 			pos 0, 0 : gmode 3,,,(cnt*5) : gcopy 998, 0, 0, scx, scy
 		
-			color 0, 0, 0 : gmode 4,,,0.5*(cnt*5)
-			boxfa 100, scy/2 - 50, 450, scy/2 + 50
+			color 0, 0, 0
+			sboxf 0.5*(cnt*5), 100, scy/2 - 50, 450, scy/2 + 50
 		
 			pos cos(rad)*(scx/4)+(scx/4) - 50, scy / 2 - 50 - 1
 			color 254, 254, 254 : gmode 4, 100, 100, 256
@@ -363,24 +432,35 @@
 		password = ""
 		
 		objsize 200, 20
-		pos 200, scy/2 - 10 : input password
+		pos 200, scy/2 - 10 : input password : sendmsg objinfo_hwnd(0),204,'*'
 	
 		gmode 2
 		pos 405, scy/2 - 20 : gcopy 18, 0, 0, 40, 40
 	
 		onclick gosub *login_onclick
 	
+		//Enterキーを押したら*login_onclickへ
+			repeat
+				getkey passenter,13
+				if passenter = 1 : goto *login_onclick
+				wait 10
+			loop
+	
 		stop
 	
 *login_onclick
 	/*→ボタンがクリックされたときの動作*/
-		if click_range (405, scy/2 - 20, 405 + 20, scy/2 + 20) = 1 {
+		if click_range (405, scy/2 - 20, 405 + 20, scy/2 + 20) = 1 or passenter = 1 {
 			if password = user_Password {
 				onclick 0
+				
+				displayed_taskbar = 0
 				goto *desktop_screen	; デスクトップ画面へ
+				
 			} else {
 				color 255, 255, 255 : font systemfont, 18
 				pos 200, scy/2 + 20 : mes "パスワードが間違っています"
+				
 			}
 		}
 	
@@ -389,14 +469,19 @@
 *desktop_screen
 	/*デスクトップ画面*/
 		clrobj
-	
-		redraw 0
 		
 	//壁紙表示
-		pos 0, 0 : gcopy user_Wallpaper_num, 0, 0, wallpaper_sizeX, wallpaper_sizeY
+		repeat 255
+			redraw 0
+			gmode 3,,,cnt
+			pos 0, 0 : gcopy user_Wallpaper_num, 0, 0, wallpaper_sizeX, wallpaper_sizeY
+			redraw 1
+		loop
 	
-		redraw 1
-		stop
+	//タスクバー表示
+		color 0, 0, 0 : taskbar 0, scy-30, scx, scy
+	
+	stop
 	
 *exit
 	/*終了*/
