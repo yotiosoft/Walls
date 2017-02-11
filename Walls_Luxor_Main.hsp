@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6001
+									　Version RM 6.0 / Build 6002
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -17,6 +17,8 @@
 		user_icon_num = 3							; ユーザーアイコンのバッファ番号
 		wallpaper_sizeX = 1024
 		wallpaper_sizeY = 576
+	
+		default_dir = dirinfo(0)
 	
 	/*バージョン情報の読み込み*/
 		notesel about_walls
@@ -136,71 +138,125 @@
 	
 /*タスクバー表示*/
 #deffunc taskbar int ltx, int lty, int rbx, int rby
-	if displayed_taskbar@ = 0 {
-		//画面をバッファ
-			buffer 999, (rbx-ltx), (rby-lty)
-				pos 0, 0 : gcopy 0, ltx, lty, (rbx-ltx), (rby-lty)
+	time = ""+gettime(4)+":"+strf("%02d", gettime(5))+""
 	
-		gsel 0
-		
-		rad = 0.00
-		
-		repeat
-			redraw 0
+	//まだタスクバーを表示していない場合
+		if displayed_taskbar@ = 0 {
 			
-			gmode 0
-			pos ltx, lty : gcopy 999, 0, 0, (rbx-ltx), (rby-lty)
+			//タスクバー部分を半透明色で塗りつぶし
+					
+				rad = 0.00
+					
+				repeat
+					redraw 0
+						
+					gmode 0
+					pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+						
+					rad += 0.05
+					sboxf@ 128, ltx, rby-(sin(rad)*(rby-lty)), rbx, rby
+				
+					if rby-(sin(rad)*(rby-lty)) = lty+1 {
+						gmode 0
+						pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+						break
+					}
+				
+					redraw 1
+					wait 1
+				loop
 			
-			rad += 0.05
-			sboxf@ 128, ltx, rby-(sin(rad)*(rby-lty)), rbx, rby
-	
-			if rby-(sin(rad)*(rby-lty)) = lty+1 {
 				gmode 0
-				pos ltx, lty : gcopy 999, 0, 0, (rbx-ltx), (rby-lty)
-				break
-			}
-	
-			redraw 1
-			wait 1
-		loop
-	}
-	
-	sboxf@ 128, ltx, lty, rbx, rby
-	
-	wait 10
-	
-	if displayed_taskbar@ = 0 {
-		rad = 1.00
-	
-		time = ""+gettime(4)+":"+gettime(5)+""
-	
-		repeat
-			redraw 0
-	
-			gmode 0
-			pos ltx, lty : gcopy 999, 0, 0, (rbx-ltx), (rby-lty)
+				pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+				
+				color 0, 0, 0 : sboxf@ 128, ltx, lty, rbx, rby
 			
-			color 0, 0, 0
-			sboxf@ 128, ltx, lty, rbx, rby
+				wait 10
 	
-			rad -= 0.05
-			color 255, 255, 255 : font ""+systemfont@+"", 16
-			pos rbx+70-cos(rad)*140, lty+5 : mes time
+			//現在時刻を表示
+				if displayed_taskbar@ = 0 {
+					rad = 1.00
+				
+					repeat
+						redraw 0
+				
+						gmode 0
+						pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+						
+						color 0, 0, 0
+						sboxf@ 128, ltx, lty, rbx, rby
+				
+						rad -= 0.05
+						color 255, 255, 255 : font ""+systemfont@+"", 16
+						pos rbx+70-cos(rad)*140, lty+5 : mes time
+				
+						if rbx+70-cos(rad)*140 = rbx-70+1 {
+							break
+						}
+				
+						redraw 1
+						wait 1
+					loop
+				}
+				
+				gmode 0
+				pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+			
+				color 0, 0, 0 : sboxf@ 128, ltx, lty, rbx, rby
+				
+				color 255, 255, 255 : font ""+systemfont@+"", 16
+				pos rbx-70, lty+5 : mes time
 	
-			if rbx+70-cos(rad)*140 = rbx-70+1 {
-				break
-			}
+			//スタートメニューボタンを表示
+				rad = 0.00
+		
+				repeat
+					redraw 0
+		
+					gmode 0
+					pos ltx, lty : gcopy 999, ltx, lty, (ltx+32), (rby-lty)
+					
+					color 0, 0, 0
+					sboxf@ 128, ltx, lty, ltx+32, rby
+		
+					rad += 0.05
+					gmode 2
+					pos 2, rby-(sin(rad)*(rby-lty)) : gcopy 2, 0, 0, 30, 30
+		
+					if rby-(sin(rad)*(rby-lty)) = lty+1 {
+						break
+					}
+		
+					redraw 1
+					wait 1
+				loop
+		}
 	
-			redraw 1
-			wait 1
-		loop
-	}
+		displayed_taskbar@ = 1
 	
-	color 255, 255, 255 : font ""+systemfont@+"", 16
-	pos rbx-70, lty+5 : mes time
+		redraw 0
+		
+		gmode 0
+		pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+	
+		color 0, 0, 0 : sboxf@ 128, ltx, lty, rbx, rby
+	
+		color 255, 255, 255 : pos rbx-70, lty+5 : mes time
+	
+		gmode 2
+		pos 2, lty : gcopy 2, 0, 0, 30, 30
+	
+		redraw 1
 	
 	return
-			
+	
+/*画面をバッファ*/
+#deffunc buffering int window_num, int buffer_num
+	buffer buffer_num, scx@, scy@
+		gcopy window_num, 0, 0, scx@, scy@
+	
+	gsel 0
+	return
 	
 #global
 	
@@ -468,7 +524,7 @@
 	
 *desktop_screen
 	/*デスクトップ画面*/
-		clrobj
+	clrobj
 		
 	//壁紙表示
 		repeat 255
@@ -478,10 +534,85 @@
 			redraw 1
 		loop
 	
+	//画面をバッファ
+		buffering 0, 999
+	
+	onclick gosub *desktop_onclick
+	
 	//タスクバー表示
-		color 0, 0, 0 : taskbar 0, scy-30, scx, scy
+		repeat
+			color 0, 0, 0 : taskbar 0, scy-30, scx, scy
+			wait 1
+		loop
 	
 	stop
+	
+*desktop_onclick
+	if click_range(0, scy-30, 32, scy) {
+		gosub *startmenu
+		return
+	}
+	
+	return
+	
+*startmenu
+	if displayed_startmenu = 0 {
+		rad = 1.00
+		rad2 = 0.00
+	
+		displayed_startmenu = 1
+	
+		repeat
+			redraw 0
+			
+			gmode 0
+			pos 0, 0 : gcopy 999, 0, 0, 250, scy-30
+	
+			if rad > 0.00 {
+				rad -= 0.05
+			}
+			rad2 += 0.05
+			
+			color 0, 0, 0
+			sboxf 180, cos(rad)*0, scy-30-sin(rad2)*(scy-30), cos(rad)*250, scy-30-sin(rad2)*0
+	
+			if scy-30-sin(rad2)*(scy-30) = 1 {
+				break
+			}
+			
+			redraw 1
+			await 15
+		loop
+	
+		gmode 0
+		pos 0, 0 : gcopy 999, 0, 0, 250, scy-30
+	
+		color 0, 0, 0
+		sboxf 180, cos(rad)*0, scy-30-sin(rad2)*(scy-30), cos(rad)*250, scy-30-sin(rad2)*0
+	
+		return
+	}
+	
+	if displayed_startmenu = 1 {
+		buffering 0, 998
+	
+		displayed_startmenu = 0
+	
+		repeat 128
+			redraw 0
+	
+			gmode 3,,,(255-(cnt*2))
+			pos 0, 0 : gcopy 998, 0, 0, 250, scy-30
+	
+			gmode 3,,,(cnt*2)
+			pos 0, 0 : gcopy 999, 0, 0, 250, scy-30
+	
+			redraw 1
+			await 1
+		loop
+	
+		return
+	}
 	
 *exit
 	/*終了*/

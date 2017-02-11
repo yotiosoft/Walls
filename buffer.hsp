@@ -1,29 +1,35 @@
 ; Walls Luxor Buffer.hsp
+	
+//System/Computer にディレクトリ移動
+	chdir "System/Computer/"
 
-/*Walls ロゴ*/
-	celload "System/Computer/C/walls/img/icons/logo.png", 1
+//Walls ロゴ
+	celload "C/walls/img/icons/logo.png", 1
 	
-/*スタートボタン*/
-	celload "System/Computer/C/walls/img/buttons/start_menu/start_button.png", 2
+//スタートボタン
+	celload "C/walls/img/buttons/startmenu/startmenu.png", 2
 	
-/*ユーザーアイコン*/
-	celload "System/Computer/C/walls/img/userimages/u1.png", 3
-	celload "System/Computer/C/walls/img/userimages/u2.png", 4
-	celload "System/Computer/C/walls/img/userimages/u3.png", 5
-	celload "System/Computer/C/walls/img/userimages/u4.png", 6
-	celload "System/Computer/C/walls/img/userimages/u5.png", 7
-	celload "System/Computer/C/walls/img/userimages/u6.png", 8
-	celload "System/Computer/C/walls/img/userimages/u7.png", 9
-	celload "System/Computer/C/walls/img/userimages/u8.png", 10
-	celload "System/Computer/C/walls/img/userimages/u9.png", 11
-	celload "System/Computer/C/walls/img/userimages/u10.png", 12
+//ユーザーアイコン
+	celload "C/walls/img/userimages/u1.png", 3
+	celload "C/walls/img/userimages/u2.png", 4
+	celload "C/walls/img/userimages/u3.png", 5
+	celload "C/walls/img/userimages/u4.png", 6
+	celload "C/walls/img/userimages/u5.png", 7
+	celload "C/walls/img/userimages/u6.png", 8
+	celload "C/walls/img/userimages/u7.png", 9
+	celload "C/walls/img/userimages/u8.png", 10
+	celload "C/walls/img/userimages/u9.png", 11
+	celload "C/walls/img/userimages/u10.png", 12
 	
-/*壁紙（デフォルト）*/
-	celload "System/Computer/C/walls/img/wallpapers/default/wallpaper1.JPG", 13
-	celload "System/Computer/C/walls/img/wallpapers/default/wallpaper2.JPG", 14
-	celload "System/Computer/C/walls/img/wallpapers/default/wallpaper3.JPG", 15
-	celload "System/Computer/C/walls/img/wallpapers/default/wallpaper4.JPG", 16
-	celload "System/Computer/C/walls/img/wallpapers/default/wallpaper5.JPG", 17
+//壁紙（デフォルト）
+	celload "C/walls/img/wallpapers/default/wallpaper1.JPG", 13
+	celload "C/walls/img/wallpapers/default/wallpaper2.JPG", 14
+	celload "C/walls/img/wallpapers/default/wallpaper3.JPG", 15
+	celload "C/walls/img/wallpapers/default/wallpaper4.JPG", 16
+	celload "C/walls/img/wallpapers/default/wallpaper5.JPG", 17
 	
-/*→ボタン*/
-	celload "System/Computer/C/walls/img/buttons/login/next.png", 18
+//→ボタン
+	celload "C/walls/img/buttons/login/next.png", 18
+	
+//ディレクトリを戻す
+	chdir default_dir
