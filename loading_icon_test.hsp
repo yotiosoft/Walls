@@ -1,0 +1,27 @@
+	circle_x = 300
+	circle_y = 300
+	
+	circle_size_x = 10
+	circle_size_y = 10
+	
+	circle_range_x = 20
+	circle_range_y = 20
+	
+	color : boxf
+	
+	rad = 1.00
+	
+	repeat
+		redraw 0
+		color 0, 0, 0 : boxf
+	
+		rad -= 0.05
+		
+		color 255,255,255
+			circle sin(rad)*circle_range_x+circle_x, cos(rad)*circle_range_y+circle_y, sin(rad)*circle_range_x+circle_x+circle_size_x, cos(rad)*circle_range_y+circle_y+circle_size_y
+	
+		redraw 1
+		await 10
+	loop
+	
+	circle circle_x-(circle_range_x/2)-circle_size_x, circle_y-(circle_range_y/2)-circle_size_y, circle_x+(circle_range_x)+circle_size_x, circle_y+(circle_range_y)+circle_size_y

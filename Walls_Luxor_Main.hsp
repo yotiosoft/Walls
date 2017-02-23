@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6002
+									　Version RM 6.0 / Build 6003
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -151,14 +151,14 @@
 					redraw 0
 						
 					gmode 0
-					pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+					pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (rbx-ltx), (rby-lty)
 						
 					rad += 0.05
 					sboxf@ 128, ltx, rby-(sin(rad)*(rby-lty)), rbx, rby
 				
 					if rby-(sin(rad)*(rby-lty)) = lty+1 {
 						gmode 0
-						pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+						pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (rbx-ltx), (rby-lty)
 						break
 					}
 				
@@ -167,7 +167,7 @@
 				loop
 			
 				gmode 0
-				pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+				pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (rbx-ltx), (rby-lty)
 				
 				color 0, 0, 0 : sboxf@ 128, ltx, lty, rbx, rby
 			
@@ -181,7 +181,7 @@
 						redraw 0
 				
 						gmode 0
-						pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+						pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (rbx-ltx), (rby-lty)
 						
 						color 0, 0, 0
 						sboxf@ 128, ltx, lty, rbx, rby
@@ -200,7 +200,7 @@
 				}
 				
 				gmode 0
-				pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+				pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (rbx-ltx), (rby-lty)
 			
 				color 0, 0, 0 : sboxf@ 128, ltx, lty, rbx, rby
 				
@@ -214,7 +214,7 @@
 					redraw 0
 		
 					gmode 0
-					pos ltx, lty : gcopy 999, ltx, lty, (ltx+32), (rby-lty)
+					pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (ltx+32), (rby-lty)
 					
 					color 0, 0, 0
 					sboxf@ 128, ltx, lty, ltx+32, rby
@@ -237,11 +237,12 @@
 		redraw 0
 		
 		gmode 0
-		pos ltx, lty : gcopy 999, ltx, lty, (rbx-ltx), (rby-lty)
+		pos ltx, lty : gcopy user_Wallpaper_num@, ltx, lty, (rbx-ltx), (rby-lty)
 	
 		color 0, 0, 0 : sboxf@ 128, ltx, lty, rbx, rby
 	
-		color 255, 255, 255 : pos rbx-70, lty+5 : mes time
+		color 255, 255, 255 : font ""+systemfont@+"", 16
+		pos rbx-70, lty+5 : mes time
 	
 		gmode 2
 		pos 2, lty : gcopy 2, 0, 0, 30, 30
@@ -253,7 +254,7 @@
 /*画面をバッファ*/
 #deffunc buffering int window_num, int buffer_num
 	buffer buffer_num, scx@, scy@
-		gcopy window_num, 0, 0, scx@, scy@
+		pos 0, 0 : gcopy window_num, 0, 0, scx@, scy@
 	
 	gsel 0
 	return
@@ -498,7 +499,7 @@
 		//Enterキーを押したら*login_onclickへ
 			repeat
 				getkey passenter,13
-				if passenter = 1 : goto *login_onclick
+				if passenter = 1 : gosub *login_onclick
 				wait 10
 			loop
 	
@@ -516,6 +517,8 @@
 			} else {
 				color 255, 255, 255 : font systemfont, 18
 				pos 200, scy/2 + 20 : mes "パスワードが間違っています"
+	
+				return
 				
 			}
 		}
@@ -537,7 +540,8 @@
 	//画面をバッファ
 		buffering 0, 999
 	
-	onclick gosub *desktop_onclick
+	//onclick
+		onclick gosub *desktop_onclick
 	
 	//タスクバー表示
 		repeat
@@ -548,10 +552,17 @@
 	stop
 	
 *desktop_onclick
-	if click_range(0, scy-30, 32, scy) {
-		gosub *startmenu
-		return
-	}
+	//スタートメニュー
+		if click_range(0, scy-30, 32, scy) {
+			gosub *startmenu
+			return
+		}
+	
+	//ダッシュボード
+		if click_range(scx-70, scy-30, scx, scy) {
+			gosub *dashboard
+			return
+		}
 	
 	return
 	
@@ -613,6 +624,57 @@
 	
 		return
 	}
+	
+	return
+	
+*dashboard
+	if displayed_dashboard = 0 {
+		repeat 128
+			redraw 0
+			
+			gmode 0
+			pos scx-200, scy-200-30 : gcopy 999, scx-200, scy-200-30, 200, 200
+			
+			gmode 3,,,(cnt/2)
+			color 0, 0, 0 : sboxf 128, scx-200, scy-30-200, scx, scy-30
+	
+			redraw 1
+			await 1
+		loop
+		
+		font systemfont, 14 : color 255, 255, 255
+		pos scx-200+10, scy-30-200+10 : mes ""+gettime(0)+"年"+gettime(1)+"月"+gettime(3)+"日"
+	
+		displayed_dashboard = 1
+		
+		return
+	}
+	
+	if displayed_dashboard = 1 {
+		buffering 0, 998
+	
+		displayed_dashboard = 0
+	
+		repeat 128
+			redraw 0
+			
+			gmode 3,,,(255-(cnt*2))
+			pos scx-200, scy-200-30 : gcopy 998, scx-200, scy-200-30, 200, 200
+			
+			gmode 3,,,(cnt*2)
+			pos scx-200, scy-200-30 : gcopy 999, scx-200, scy-200-30, 200, 200
+	
+			redraw 1
+			await 1
+		loop
+	
+		gmode 0
+		pos scx-200, scy-200-30 : gcopy 999, scx-200, scy-200-30, 200, 200
+		
+		return
+	}
+	
+	return
 	
 *exit
 	/*終了*/
