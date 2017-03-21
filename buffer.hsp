@@ -1,35 +1,50 @@
 ; Walls Luxor Buffer.hsp
 	
 //System/Computer にディレクトリ移動
-	chdir "System/Computer/"
+	chdir "System/Computer/C@Drive/walls/img/"
 
 //Walls ロゴ
-	celload "C/walls/img/icons/logo.png", 1
+	celload "icons/logo.png", 1
 	
 //スタートボタン
-	celload "C/walls/img/buttons/startmenu/startmenu.png", 2
+	celload "buttons/startmenu/startmenu.png", 2
 	
 //ユーザーアイコン
-	celload "C/walls/img/userimages/u1.png", 3
-	celload "C/walls/img/userimages/u2.png", 4
-	celload "C/walls/img/userimages/u3.png", 5
-	celload "C/walls/img/userimages/u4.png", 6
-	celload "C/walls/img/userimages/u5.png", 7
-	celload "C/walls/img/userimages/u6.png", 8
-	celload "C/walls/img/userimages/u7.png", 9
-	celload "C/walls/img/userimages/u8.png", 10
-	celload "C/walls/img/userimages/u9.png", 11
-	celload "C/walls/img/userimages/u10.png", 12
+	celload "userimages/u1.png", 3
+	celload "userimages/u2.png", 4
+	celload "userimages/u3.png", 5
+	celload "userimages/u4.png", 6
+	celload "userimages/u5.png", 7
+	celload "userimages/u6.png", 8
+	celload "userimages/u7.png", 9
+	celload "userimages/u8.png", 10
+	celload "userimages/u9.png", 11
+	celload "userimages/u10.png", 12
 	
 //壁紙（デフォルト）
-	celload "C/walls/img/wallpapers/default/wallpaper1.JPG", 13
-	celload "C/walls/img/wallpapers/default/wallpaper2.JPG", 14
-	celload "C/walls/img/wallpapers/default/wallpaper3.JPG", 15
-	celload "C/walls/img/wallpapers/default/wallpaper4.JPG", 16
-	celload "C/walls/img/wallpapers/default/wallpaper5.JPG", 17
+	celload "wallpapers/default/wallpaper1.JPG", 13
+	celload "wallpapers/default/wallpaper2.JPG", 14
+	celload "wallpapers/default/wallpaper3.JPG", 15
+	celload "wallpapers/default/wallpaper4.JPG", 16
+	celload "wallpapers/default/wallpaper5.JPG", 17
 	
 //→ボタン
-	celload "C/walls/img/buttons/login/next.png", 18
+	celload "buttons/login/next.png", 18
+	
+//エクスプローラーで使うアイコン
+	celload "icons/explorer/folder.png", 19	; フォルダアイコン
+	celload "icons/explorer/drive.png", 20	; ドライブアイコン
+	celload "icons/explorer/file.png", 21	; ファイルアイコン
+	celload "icons/explorer/ax.png", 22		; axファイルアイコン
+	celload "icons/explorer/exe.png", 23	; exeファイルアイコン
+	celload "icons/explorer/text.png", 24	; テキストファイルアイコン
+	
+//最小化ボタン・閉じるボタン
+	celload "buttons/window_titlebar/_.png", 25	; 最小化ボタン
+	celload "buttons/window_titlebar/x.png", 26	; 閉じるボタン
+	
+//デスクトップ画面に表示するアイコン
+	celload "icons/desktop_screen/pc.png", 27	; マイコンピュータ
 	
 //ディレクトリを戻す
 	chdir default_dir

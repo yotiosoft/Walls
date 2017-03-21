@@ -1,0 +1,287 @@
+/*髪ってる Ver.0.1*/
+
+#module
+
+#deffunc cmes str ctext, int cx, int cy, int cx2, int cy2, int redraw_exist		;文字を中央に表示（使用例：cmes "hogehoge", 0, 640, 0, 480, 0）
+	#include "user32.as"
+	if cx2=0 : cx2=scx		;cx2が省略されている場合、画面右端の座標をcx2に代入
+	if cy2=0 : cy2=scy		;cy2が省略されている場合、画面下端の座標をcy2に代入
+	RECT = cx, cy, cx2, cy2
+	DrawText hdc, ctext, -1, varptr(RECT), $01
+	
+	if redraw_exist = 0 : redraw 1
+	return
+
+#global
+
+#epack "logo.png"
+#epack "face.png"
+#epack "hair_nor.png"
+#epack "hair_1.png"
+#epack "hair_2.png"
+#epack "hair_3.png"
+#epack "hand.png"
+
+#packopt name "髪ってる"
+
+*img_load
+	celload "logo.png", 1
+	
+	celload "face.png", 2
+	celload "hair_nor.png", 3
+	celload "hair_1.png", 4
+	celload "hair_2.png", 5
+	celload "hair_3.png", 6
+	celload "hand.png", 7
+	
+	title "髪ってるゥゥゥゥゥゥ"
+
+*menu
+	width 400, 600
+	
+	clrobj
+	color 255, 255, 255 : boxf
+	
+	onclick 0
+	
+	pos 80, 50 : gcopy 1, 0, 0, 240, 73
+	
+	objsize 200, 30
+	pos 100, 350 : button "はじめる", *game
+	pos 100, 380 : button "ルール", *rule
+	
+	repeat
+		redraw 0
+		
+		color 255, 255, 255 : boxf 0, 150, 400, 600
+	
+		if cnt \ 2 = 0 {
+			pos 0, 150 : gzoom 400, 200, 3, 0, 0, 200, 105
+		} else {
+			pos 0, 150 : gzoom 400, 200, 4, 0, 0, 200, 105
+		}
+	
+		redraw 1
+		wait 100
+	loop
+	
+	stop
+	
+*game
+	/*ゲーム本編*/
+	clrobj
+	color 255, 255, 255 : boxf
+	
+	onclick gosub *hand
+	
+	randomize
+	
+	wind = 0
+	danger = 0
+	
+	repeat
+		redraw 0
+	
+		color 255, 255, 255 : boxf
+	
+		pos 0, 330 : gcopy 2, 0, 0, 400, 150
+	
+		/*風の強さをランダムに増減する*/
+		if rnd(3) = 0 and wind > 0 {
+			wind -= 1
+		}
+		if rnd(3) = 2 and wind < 3 {
+			wind += 1
+		}
+	
+		font "", 16
+	
+		/*無風*/
+		if wind = 0 {
+			color 0, 162, 232
+			pos 10, 10 : mes "無風"
+	
+			if danger >= 1 {
+				danger -= 1
+			}
+	
+			before_wind = wind
+			
+			pos 100, 231 : gcopy 3, 0, 0, 200, 105
+		}
+		if wind = 1 {
+			color 0, 232, 162
+			pos 10, 10 : mes "そよ風"
+	
+			if danger >= 1 {
+				if before_wind = 0 {
+					danger += 1
+				} else : if before_wind = 2 {
+					danger -= 1
+				}
+			}
+	
+			before_wind = wind
+			
+			pos 100, 231 : gcopy 4, 0, 0, 200, 105
+		}
+		if wind = 2 {
+			color 255, 127, 39
+			pos 10, 10 : mes "やや強風"
+	
+			if raise_arm != 1 and raise_arm != 2 {
+				if before_wind = 1 {
+					danger += 1
+				} else : if before_wind = 3 {
+					danger -= 1
+				}
+			}
+	
+			before_wind = wind
+			
+			pos 100, 231 : gcopy 5, 0, 0, 200, 105
+		}
+		if wind = 3 {
+			color 255, 0, 0
+			pos 10, 10 : mes "強風"
+			
+			if raise_arm != 1 and raise_arm != 2 {
+				danger += 1
+			}
+	
+			before_wind = wind
+			
+			pos 100, 231 : gcopy 6, 0, 0, 200, 105
+		}
+	
+		if danger < 0 {
+			danger = 0
+		}
+	
+		/*経過時間*/
+		color
+		pos 10, 30 : mes "経過時間　"+(cnt / 2)+""
+	
+		/*髪の毛の状態*/
+		pos 10, 50 : mes "髪の状態\n危険度"
+		
+		if danger <= 3 {
+			state = "安全"
+			color 0, 162, 232
+		}
+		if danger = 4 or danger = 5 {
+			state = "やや安全"
+			color 0, 232, 162
+		}
+		if danger = 6 or danger = 7 {
+			state = "注意"
+			color 255, 127, 39
+		}
+		if danger = 8 or danger = 9 {
+			state = "危険"
+			color 255, 0, 0
+		}
+	
+		pos 80, 50 : mes ""+state+"\n"+danger+""
+	
+		/*ゲームオーバー*/
+		if danger >= 10 {
+			redraw 1
+			break
+		}
+	
+		/*腕の画像を表示*/
+		if raise_arm = 1 or raise_arm = 2 {
+			color 255, 255, 255 : gmode 4, 200, 300, 256
+			pos 0, 230 : gcopy 7, 0, 0, 400, 300
+	
+			if danger > 0 {
+				danger -= 1
+			}
+	
+			raise_arm ++
+		}
+		if raise_arm >= 3 {
+			cannot_raise_arm ++
+			raise_arm ++
+		}
+	
+		if cannot_raise_arm >= 6 {
+			cannot_raise_arm = 0
+			raise_arm = 0
+		}
+	
+		redraw 1
+	
+		wait 50
+	
+	loop
+	
+	/*ゲームオーバー時の処理*/
+	
+	objsize 100, 30
+	pos 150, 200 : button "Again?", *game
+	
+	rad = double(0.00)
+	
+	repeat
+		redraw 0
+	
+		rad += 0.01
+	
+		color 255, 255, 255 : boxf
+		
+		pos 0, 330 : gcopy 2, 0, 0, 400, 150
+		
+		font "", 36 : color 255, 0, 0
+		pos 100, 150 : mes "GAME OVER"
+	
+		pos 100 + cnt, 231 - (sin(rad)*cnt)
+		color 255, 255, 255 : gmode 4, 200, 105, 256
+		gcopy 6, 0, 0, 200, 105
+	
+		redraw 1
+	
+		if (100+cnt) > 400 {
+			break
+		}
+	
+		await 10
+	loop
+	
+	stop
+	
+*hand
+	if cannot_raise_arm != 0 {
+		return
+	}
+	
+	color 255, 255, 255 : gmode 4, 200, 300, 256
+	pos 0, 230 : gcopy 7, 0, 0, 400, 300
+	
+	raise_arm = 1
+	
+	return
+
+*rule
+	clrobj
+	color 255, 255, 255 : boxf
+	
+	color 0, 0, 0
+	
+	font "", 36
+	cmes "Rule", 0, 10, 400, 50
+	
+	font "", 16
+	cmes "おじいさんの頭頂部にそびえ立つ1本の髪の毛。\nその髪の毛が抜けないように、\n風から守ってあげてください。\n\n髪の毛が抜けるかどうかは危険度で判断します。\n危険度は0～10まであり、危険度が10になると\n髪の毛が抜けてゲームオーバーになります。\n\n髪の毛を風から守るには、\n手で髪の毛を隠す必要があります。\nウィンドウ上でクリックすると手が出現します。\nただし、このおじいさんは五十肩なので\n肩が1秒間しか上がらず、\n一度上げると3秒間上げることができません。\n\n髪の毛を手で隠すと危険度が下がり、\n手で隠している間は危険度は上がりません。", 0, 70, 400, 600
+	
+	objsize 100, 30
+	pos 150, 350 : button "Back", *menu
+	
+	color 255, 255, 255 : gmode 4, 200, 105, 256
+	pos 100, 367 : gcopy 3, 0, 0, 200, 105
+	
+	color 255, 255, 255 : gmode 4, 400, 100, 256
+	pos 0, 460 : gcopy 2, 0, 0, 400, 100
+	
+	stop

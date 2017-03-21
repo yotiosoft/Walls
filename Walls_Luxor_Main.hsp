@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6003
+									　Version RM 6.0 / Build 6004
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -22,7 +22,7 @@
 	
 	/*バージョン情報の読み込み*/
 		notesel about_walls
-		noteload "System/Computer/C/walls/about/about.wal"
+		noteload "System/Computer/C@Drive/walls/about/about.wal"
 		noteget about_walls_title, 0
 	
 	/*タイトル表示*/
@@ -34,7 +34,7 @@
 			scy=ginfo(21)										; スクリーン全体の解像度y
 			chgdisp 1,scx,scy									; 全画面化
 			bgscr 0,scx,scy,,0,0 : phwnd.0 = hwnd				; 親ウィンドウ作成
-		}else{												; ウィンドウモード
+		} else {											; ウィンドウモード
 			scx=1024											; スクリーン全体の解像度x
 			scy=576												; スクリーン全体の解像度y
 			screen 0,1024,576 : phwnd.0 = hwnd					;親ウィンドウ作成
@@ -45,6 +45,8 @@
 #uselib "user32.dll"
 	#func SetParentA "SetParent" int,int					;親子ウィンドウの作成に使う
 	#cfunc WindowFromPointA "WindowFromPoint" int, int		;ウィンドウを動かすときに使う
+	
+	#func GetFocusA "GetFocus"								;フォーカスのあるウィンドウのハンドルを取得
 	
 	#func GetWindowLongA2 "GetWindowLongA" int , int 											;入力ボックスの色を変更するときに使う
 	#func SetWindowLongA2 "SetWindowLongA" int , int , int 										
@@ -259,6 +261,30 @@
 	gsel 0
 	return
 	
+/*子ウィンドウの作成・表示*/
+#deffunc windowmake int wID, int windowx, int windowy, int window_mode
+	bgscr wID,windowx,windowy
+	
+	phwnd@.wID = hwnd
+	windows@=windows@+1		;子ウィンドウの総数
+	windowx@=windowx
+	windowy@=windowy
+	
+	SetParent phwnd@.wID,phwnd@.0
+	
+	new_wID@++						;次回ウィンドウを作るときのウィンドウID
+	windowmode@.wID@ = window_mode	;ウィンドウモード
+	
+	gsel wID@
+	return
+	
+/*各項目の読み込み（使用例：get_chapter(元の変数, "検索する項目", "始点区切りコード", "終端コード") ）*/
+#defcfunc get_chapter var underlying_var, str search_chapter, str punctuate, str end_word
+	value = instr(underlying_var, 0, search_chapter)
+	get_chapter_buf = strmid ( underlying_var, value + strlen(""+search_chapter+""+punctuate+""), instr(underlying_var, value + strlen(""+search_chapter+""+punctuate+""), end_word) )
+	
+	return get_chapter_buf
+	
 #global
 	
 *boot
@@ -306,7 +332,7 @@
 	
 *loading_registered_users
 	notesel registered_users
-	noteload "System/Computer/C/user/registered_users.wal"
+	noteload "System/Computer/C@Drive/user/registered_users.wal"
 	
 	sdim registered_user, notemax
 	
@@ -401,12 +427,33 @@
 		
 			await 1
 		loop
-		
-		wait 200
 	
-*loadig_about_user
+*variables
+	/*変数の初期化*/
+		wID = 1000
+		new_wID = wID + 1
+		first_wID = new_wID
+		window_data = ""
+		
+		new_eID = -1
+		
+		windowx = 1024 : windowy = 576
+		
+		systemfont = "Meiryo"
+		
+		directory = dirinfo(0)
+		
+		sdim filelist, 1024, 1000, 0
+		sdim filelist_with_path, 1024, 1000, 0
+		sdim filelist_category, 1024, 1000, 0
+		
+		sdim covered, 64, scx, scy
+			
+	wait 200
+	
+*loading_about_user
 	notesel user_config
-	noteload "System/Computer/C/user/"+registered_user(0)+"/config.wal"
+	noteload "System/Computer/C@Drive/user/"+registered_user(0)+"/config.wal"
 	
 	noteget user_Password, 1
 	noteget user_Icon_num, 3
@@ -414,9 +461,10 @@
 	
 	user_Icon_num = int(user_Icon_num)+2
 	user_Wallpaper_num = int(user_Wallpaper_num)+12
+	
+/*-----------------------------------------------------ログイン画面-----------------------------------------------------------*/
 
 *login
-	/*ログイン画面*/
 		rad = double(0.00)
 		
 		repeat
@@ -524,10 +572,16 @@
 		}
 	
 	return
-	
+
+/*------------------------------------------------------------デスクトップ画面-------------------------------------------------------------------*/
+
 *desktop_screen
-	/*デスクトップ画面*/
 	clrobj
+	
+	now = "desktop_screen"
+	
+	//親ウィンドウのハンドルを取得
+		parent_hwnd = hwnd
 		
 	//壁紙表示
 		repeat 255
@@ -537,11 +591,33 @@
 			redraw 1
 		loop
 	
-	//画面をバッファ
-		buffering 0, 999
-	
+*desktop_screen_2
 	//onclick
-		onclick gosub *desktop_onclick
+		onclick gosub *on_click
+	
+	//画面全体（タスクバー除く）がデスクトップ画面にあることを示す
+		repeat scx
+			x = cnt
+			repeat (scy-30)
+				y = cnt
+				covered(x,y) = "desktop_screen"
+			loop
+		loop
+		
+	//ショートカット、ウィジェット配置
+		//とりあえずエクスプローラーのアイコンのみ
+			pos 10, 10 : gmode 2 : gcopy 27, 0, 0, 48, 48
+	
+	//画面をバッファ
+		if sub = 0 {
+			buffering 0, 999
+		}
+	
+	//sub=1ならreturn
+		if sub = 1 {
+			sub = 0
+			return
+		}
 	
 	//タスクバー表示
 		repeat
@@ -551,22 +627,11 @@
 	
 	stop
 	
-*desktop_onclick
-	//スタートメニュー
-		if click_range(0, scy-30, 32, scy) {
-			gosub *startmenu
-			return
-		}
-	
-	//ダッシュボード
-		if click_range(scx-70, scy-30, scx, scy) {
-			gosub *dashboard
-			return
-		}
-	
-	return
+/*--------------------------------------------------------スタートメニュー----------------------------------------------------*/
 	
 *startmenu
+	now = "startmenu"
+	
 	if displayed_startmenu = 0 {
 		rad = 1.00
 		rad2 = 0.00
@@ -601,6 +666,15 @@
 		color 0, 0, 0
 		sboxf 180, cos(rad)*0, scy-30-sin(rad2)*(scy-30), cos(rad)*250, scy-30-sin(rad2)*0
 	
+		//スタートメニューに隠れている部分を"startmenu"に変更
+			repeat 250
+				x = cnt
+				repeat (scy-30)
+					y = cnt
+					covered(x,y) = "startmenu"
+				loop
+			loop
+	
 		return
 	}
 	
@@ -622,12 +696,19 @@
 			await 1
 		loop
 	
+		sub = 1
+		gosub *desktop_screen_2
+	
 		return
 	}
 	
 	return
 	
+/*------------------------------------------------------------------ダッシュボード-----------------------------------------------------------------*/
+	
 *dashboard
+	now = "dashbord"
+	
 	if displayed_dashboard = 0 {
 		repeat 128
 			redraw 0
@@ -670,12 +751,404 @@
 	
 		gmode 0
 		pos scx-200, scy-200-30 : gcopy 999, scx-200, scy-200-30, 200, 200
+	
+		sub = 1
+		gosub *desktop_screen_2
 		
 		return
 	}
 	
 	return
 	
+/*---------------------------------------------------エクスプローラー-----------------------------------------------------*/
+
+*File_Explorer
+	now = "File_Explorer"
+	wID = new_wID
+	
+	new_eID += 1
+	eID = new_eID
+	
+	notesel File_Explorer__Dir_buf
+	noteadd ""+directory+"\\System\\Computer\\", eID, 1
+	
+	WindowSize_X = 800
+	WindowSize_Y = 500
+	
+	windowmake wID, WindowSize_X, WindowSize_Y, 1
+	
+	eID_hwnd(eID) = hwnd
+	eID_wID(eID) = wID
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button gosub "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button gosub "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+*File_Explorer__draw
+	//どのエクスプローラーがアクティブか確認
+		GetFocusA : Focus_hand = stat
+	
+		eID = -1
+		
+		repeat new_eID+1
+			if eID_hwnd(cnt) = Focus_hand {
+				eID = cnt
+				break
+			}
+		loop
+	
+		gsel eID_wID(eID)
+		
+	//背景色
+		color 250, 250, 250 : boxf
+	
+	//エクスプローラー上部のタブ
+		File_Explorer__border_Tabmenu_y = 50
+		color 0, 162, 232 : boxf 0, 0, WindowSize_X-1, File_Explorer__border_Tabmenu_y
+	
+	//エクスプローラー2段めのメニュー
+		File_Explorer__border_2nd_menu_y = 80
+		color 240, 240, 240 : boxf 0, File_Explorer__border_Tabmenu_y, WindowSize_X, File_Explorer__border_2nd_menu_y
+	
+	//エクスプローラー左側のメニュー
+		File_Explorer__border_Sidemenu_x = 200
+		color 50, 50, 50 : boxf 0, File_Explorer__border_2nd_menu_y, File_Explorer__border_Sidemenu_x, WindowSize_Y
+	
+	//エクスプローラー部分
+		gosub *File_Explorer__get_files
+	
+		color 0, 0, 0
+		font systemfont, 14
+	
+		repeat get_files__total_files(eID)
+			//アイコン
+				pos File_Explorer__border_Sidemenu_x+20, File_Explorer__border_2nd_menu_y+20+(cnt*32)   : gmode 2
+				if filelist_category(eID,cnt) = "Drive" {
+					gcopy 20, 0, 0, 30, 30
+				} else : if filelist_category(eID,cnt) = "Directory" {
+					gcopy 19, 0, 0, 30, 30
+				} else : if filelist_category(eID,cnt) = "File" {
+					gcopy 21, 0, 0, 30, 30
+				} else : if filelist_category(eID,cnt) = "File__ax" {
+					gcopy 22, 0, 0, 30, 30
+				} else : if filelist_category(eID,cnt) = "File__exe" {
+					gcopy 23, 0, 0, 30, 30
+				} else : if filelist_category(eID,cnt) = "File__text" {
+					gcopy 24, 0, 0, 30, 30
+				}
+				
+			//ファイル名・ディレクトリ名
+				pos File_Explorer__border_Sidemenu_x+60, File_Explorer__border_2nd_menu_y+20+(cnt*32)+5 : mes ""+filelist(eID,cnt)+""
+		loop
+	
+	notesel window_data
+	noteadd "1", (wID-first_wID), 1
+	
+	stop
+	
+*File_Explorer__get_files
+	notesel File_Explorer__Dir_buf
+	noteget File_Explorer__Dir, eID
+	
+	chdir File_Explorer__Dir
+	
+	filelist_buf = ""
+	
+	//パス名を覗いたファイルとディレクトリの一覧を取得
+		dirlist filelist_buf, "*.*", 0
+		get_files__total_files(eID) = stat
+		
+		repeat get_files__total_files(eID)
+			//ファイル名・ディレクトリ名
+				notesel filelist_buf
+				noteget filelist(eID,cnt), cnt
+	
+			//ファイル・ディレクトリのパス
+				filelist_with_path(eID,cnt) = ""+File_Explorer__Dir+"\\"+filelist(eID,cnt)+""
+	
+			//ファイル・ディレクトリの種類
+				filelist_category(eID,cnt) = "Directory"
+				
+				//ディレクトリ名に特殊文字"%"があった場合
+				if instr(filelist(eID,cnt), 0, "@") != -1 {
+					if instr(filelist(eID,cnt), 0, "@Drive") != -1 {
+						filelist(eID,cnt) = strmid(filelist(eID,cnt), 0, instr(filelist(eID,cnt), 0, "@Drive"))
+						filelist(eID,cnt) += "ドライブ（"+filelist(eID,cnt)+":\\）"
+						filelist_category(eID,cnt) = "Drive"
+					}
+				}
+	
+				//ファイル名に拡張子"."があった場合
+				if instr(filelist(eID,cnt), 0, ".") != -1 {
+					filelist_category(eID,cnt) = "File"
+	
+					//拡張子からファイルの種類を判定
+					if instr(filelist(eID,cnt), 0, ".ax") != -1 {
+						filelist_category(eID,cnt) = "File__ax"
+					}
+					if instr(filelist(eID,cnt), 0, ".exe") != -1 {
+						filelist_category(eID,cnt) = "File__exe"
+					}
+					if instr(filelist(eID,cnt), 0, ".txt") != -1 {
+						filelist_category(eID,cnt) = "File__text"
+					}
+				}
+				
+		loop
+	
+	//カレントディレクトリを元に戻す
+		chdir directory
+	
+	return
+	
+*run_ax
+	/*ax形式のファイルの実行*/
+	now = "run_ax"
+	
+	//実行ファイルの情報を取得
+		//初期値
+			about_ax__Title = filelist(eID,clicked_file_number)
+			about_ax__Size_X = 640
+			about_ax__Size_Y = 480
+	
+		//ファイルの情報ファイル（.aax形式）があれば読み込み
+			exist ""+File_Explorer__Dir+"\\about.aax"
+		
+			if strsize != -1 {
+				notesel about_ax
+				noteload ""+File_Explorer__Dir+"\\about.aax"
+		
+				repeat 3
+					noteget about_ax_buf, cnt
+		
+					if instr(about_ax_buf, 0, "Title") != -1 {
+						about_ax__Title = get_chapter(about_ax_buf, "Title", " = \"", "\";")
+					}
+					if instr(about_ax_buf, 0, "Size_X") != -1 {
+						about_ax__Size_X = int( get_chapter(about_ax_buf, "Size_X", " = ", ";") )
+					}
+					if instr(about_ax_buf, 0, "Size_Y") != -1 {
+						about_ax__Size_Y = int( get_chapter(about_ax_buf, "Size_Y", " = ", ";") )
+					}
+				loop
+			}
+	
+	//ウィンドウ作成
+		wID = new_wID
+	
+		WindowSize_X = about_ax__Size_X +2
+		WindowSize_Y = about_ax__Size_Y +32+1
+		
+		windowmake wID, WindowSize_X, WindowSize_Y, 1
+		
+		onclick gosub *on_click
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button gosub "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button gosub "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+	//タイトルバー及び枠
+		color 0, 162, 232 : boxf
+	
+		color 255, 255, 255
+		cmes about_ax__Title, 0, 10, about_ax__Size_X+2, 32
+	
+	//ディレクトリ変更
+		chdir File_Explorer__Dir
+		
+	//実行
+		HSPCreateThread hwnd, ax_file, 1, 32, about_ax__Size_X, about_ax__Size_Y, 0x100
+	
+	stop
+	
+*run_exe
+	/*exe形式のファイルの実行（exec）*/
+	now = "run_exe"
+	onclick gosub *on_click
+	
+	exec exe_file
+	
+	stop
+	
+*open_text
+	/*テキストファイルを開く（exec）*/
+	now = "open_text"
+	onclick gosub *on_click
+	
+	exec text_file, 16
+	
+	stop
+	
+/*-------------------------------------------------------ウィンドウ操作--------------------------------------------------------------*/
+	
+*window_minimization
+	/*ウィンドウの最小化*/
+	
+		dialog"まだ出来ません.."
+	
+		stop
+	
+*window_close
+	/*ウィンドウを消す（最小化ではない）*/
+	
+	extant_window = 0
+	
+	repeat new_wID - first_wID
+		;現存する（＝まだ消されていない）ウィンドウがいくつあるか調べる
+			notesel window_data
+			noteget window_data_buf, cnt
+			
+			if window_data_buf = "1" {
+				extant_window ++
+			}
+	
+		;現在アクティブな子ウィンドウを検出（どのウィンドウを消すか）
+			GetFocusA : Focus_hand = stat
+		
+			gsel 0
+			title "Focus_hand="+Focus_hand+" close_button_hwnd(cnt)="+close_button_hwnd(cnt)+""
+	
+			;ウィンドウを消すボタンと一致していればそのボタンが設置されているウィンドウを消す
+			if Focus_hand == close_button_hwnd(cnt) {
+				clear_wID = cnt+first_wID
+				gsel clear_wID, -1
+			
+				notesel window_data
+				noteadd "0", (clear_wID-first_wID), 1
+					
+				break
+			}
+	
+	loop
+	
+	gsel 0
+	return
+	
+/*--------------------------------------------------クリックされたときの動作-------------------------------------------------*/
+
+*on_click
+	/*親ウィンドウ・子ウィンドウ問わずクリックされたときの動作*/
+	
+	//まず子ウィンドウを動かす以外の目的でクリックされていないか確認
+		gosub *clicked_on_other_than_windows
+	
+	//現在アクティブなウィンドウが親ウィンドウならreturn
+		if hwnd = parent_hwnd {
+			return
+		}
+	
+	//子ウィンドウを動かす
+		now = "on_click"
+	
+		;現在アクティブな子ウィンドウを検出（どのウィンドウを消すか）
+			GetFocusA : Focus_hand = stat
+		
+			gsel 0
+			title "Focus_hand="+Focus_hand+""
+		
+		;現在アクティブな子ウィンドウを検出
+			repeat new_wID - 1
+				if WindowFromPointA( ginfo(0), ginfo(1) ) == phwnd(cnt+1) : wID = cnt+1 : break
+			loop
+			
+			if wID = 0 or windowmode.wID = 2 {
+				return
+			}
+		
+	gsel wID
+	sendmsg phwnd.wID,$00A1,2,0 
+	
+	return
+	
+*clicked_on_other_than_windows
+	/*子ウィンドウを動かす以外の目的でクリックされたときの動作*/
+	
+	//親ウィンドウ
+		gsel 0
+		
+		//スタートメニュー
+			if click_range(0, scy-30, 32, scy) {
+				gosub *startmenu
+				return
+			}
+		
+		//ダッシュボード
+			if click_range(scx-70, scy-30, scx, scy) {
+				gosub *dashboard
+				return
+			}
+	
+		//デスクトップ画面（*desktop_screen）のアイコン
+			GetFocusA : Focus_hand = stat
+			
+			if click_range(10, 10, 10+48, 10+48) and now != "File_Explorer" and parent_hwnd = Focus_hand {
+				if covered(mousex,mousey) = "desktop_screen" {
+					goto *File_Explorer
+				}
+			}
+	
+	//エクスプローラー（*File_Explorer）
+		//エクスプローラーのウィンドウにフォーカスがあるか確認
+			GetFocusA : Focus_hand = stat
+			
+			eID = -1
+			
+			repeat new_eID+1
+				if eID_hwnd(cnt) = Focus_hand {
+					eID = cnt
+					break
+				}
+			loop
+			
+		if eID != -1 {
+			gsel eID_wID(eID)
+	
+			//フォルダ・ファイルを開く
+				if click_range(File_Explorer__border_Sidemenu_x, File_Explorer__border_2nd_menu_y, WindowSize_X, WindowSize_Y) = 1 {
+					clicked_file_number = ( ginfo_my-ginfo_wy1-(File_Explorer__border_2nd_menu_y+20) )/32
+	
+					if clicked_file_number > get_files__total_files(eID)-1 {
+						return
+					}
+	
+					if filelist_category(eID,clicked_file_number) != "Directory" and filelist_category(eID,clicked_file_number) != "Drive" {
+						
+						if filelist_category(eID,clicked_file_number) = "File__ax" {
+							ax_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
+							goto *run_ax
+						} else : if filelist_category(eID,clicked_file_number) = "File__exe" {
+							exe_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
+							goto *run_exe
+						} else : if filelist_category(eID,clicked_file_number) = "File__text" {
+							text_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
+							goto *open_text
+						} else {
+							return
+						}
+						
+					}
+					
+					notesel File_Explorer__Dir_buf
+					noteadd ""+filelist_with_path(eID, clicked_file_number)+"\\", eID, 1
+					
+					goto *File_Explorer__draw
+				}
+	
+		}
+	
+	return
+	
+/*----------------------------------------終了------------------------------------------*/
+	
 *exit
-	/*終了*/
-		end
+	end

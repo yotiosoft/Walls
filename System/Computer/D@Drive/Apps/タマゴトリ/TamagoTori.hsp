@@ -1,0 +1,1444 @@
+/*--------------------------------------------------------------------------------------------------
+
+										タマゴトリ TamagoTori.hsp
+	
+										(C)2016-2017 YotioSoft
+										※改造・再配布は自由です
+
+--------------------------------------------------------------------------------------------------*/
+
+	/*現在のディレクトリ*/
+		dir = dirinfo(0)
+	
+	/*ウィンドウサイズ設定*/
+		width 400, 330
+	
+	/*タイトル*/
+		title "タマゴトリ"
+	
+	/*現在のカレントディレクトリ*/
+		dir = dirinfo(0)
+	
+	/*mci登録*/
+		mci "set TamagoTori time format milliseconds"
+	
+	/*ウィンドウを閉じたとき*/
+		onexit *exit
+	
+	/*新規命令登録*/
+		#module
+	
+			#deffunc cmes str ctext, int cx, int cy, int cx2, int cy2, int redraw_exist		;文字を中央に表示（使用例：cmes "hogehoge", 0, 640, 0, 480, 0）
+				#include "user32.as"
+				if cx2=0 : cx2=scx		;cx2が省略されている場合、画面右端の座標をcx2に代入
+				if cy2=0 : cy2=scy		;cy2が省略されている場合、画面下端の座標をcy2に代入
+				RECT = cx, cy, cx2, cy2
+				DrawText hdc, ctext, -1, varptr(RECT), $01
+				
+				if redraw_exist = 0 : redraw 1
+				return
+			
+			#deffunc gblur int p1, int p2	;画像をぼかす（hsp/sample/new/gblur.hsp）
+				
+				gmode 3, ginfo_sx, ginfo_sy, 128
+				if (p2&1)=0 {
+					repeat p1
+					pos 1,0:gcopy ginfo(3)
+					pos 0,0:gcopy ginfo(3),2,0
+					loop
+				}
+				if (p2&2)=0 {
+					repeat p1
+					pos 0,1:gcopy ginfo(3)
+					pos 0,0:gcopy ginfo(3),0,2
+					loop
+				}
+				return
+	
+		#global
+
+/*バッファ*/
+*buffering
+	/*タイル*/
+		buffer 1, 25, 25 : color 40, 180, 80 : boxf
+		buffer 2, 25, 25 : color 60, 185, 100 : boxf
+		buffer 3, 25, 25 : color 0, 162, 232 : boxf
+	
+	/*タイトルロゴ*/
+		celload "img/free-illust59493.png", 4
+	
+	/*ボタン*/
+		buffer 5, 100, 20  :  color 0, 162, 232 : boxf  :  color 255, 255, 255 : boxf 1, 1, 98, 18
+	
+	/*キャラクター*/
+		//ニワトリ
+		celload "img/chicken.png", 6
+		buffer 7 : pos 25 - 1, 0 : gzoom -25, 25, 6, 0, 0, 25, 25, 1	; 反転ver.
+	
+		//タマゴ
+		celload "img/egg.png", 8
+	
+		//ネコ
+		celload "img/cat.png", 11
+		buffer 12 : pos 25 - 1, 0 : gzoom -25, 25, 11, 0, 0, 25, 25, 1	; 反転ver.
+	
+	gsel 0
+
+/*タイトル画面*/
+*title_menu
+	clrobj
+	
+	chdir dir
+	
+	if playing_file != "oo39_ys067.mp3" {
+		mci "close TamagoTori"
+	}
+	mci "open \""+dir+"\\bgm\\oo39_ys067.mp3\" alias TamagoTori"	; ファイルオープン
+	mci "play TamagoTori repeat"									; 再生
+	mci "setaudio TamagoTori volume to 200"							; 音量調節
+	
+	playing_file = "oo39_ys067.mp3"
+	
+	stage = 1
+	
+	from_game_select = 0
+	from_create_select = 0
+	
+	chicken_x = 200
+	chicken_y = 150
+	
+	if select > 1 {
+		select = 0
+	}
+	
+*title_menu2
+	select = 0
+	
+	randomize
+	
+	repeat
+	
+		redraw 0
+	
+		color 40, 180, 80 : boxf
+		
+		gmode 2
+		pos 25, 5 : gcopy 4, 0, 0, 400, 156
+	
+		if cnt \ 10 = 0 {
+			
+			chicken_direction = rnd(4)
+				
+			if chicken_direction = 0 {
+				chicken_x += 25
+			}
+			if chicken_direction = 1 {
+				chicken_x -= 25
+			}
+			if chicken_direction = 2 {
+				chicken_y += 25
+			}
+			if chicken_direction = 3 {
+				chicken_x -= 25
+			}
+	
+		}
+	
+		gmode 2
+		if chicken_direction = 1 {
+			pos chicken_x, chicken_y : gcopy 7, 0, 0, 25, 25
+		} else {
+			pos chicken_x, chicken_y : gcopy 6, 0, 0, 25, 25
+		}
+		
+	
+		color 255, 255, 255 : font "", 14
+		
+		if select = 0 {
+			pos 150, 250 : mes "・"
+		}
+		if select = 1 {
+			pos 150, 270 : mes "・"
+		}
+		if select = 2 {
+			pos 150, 290 : mes "・"
+		}
+	
+		if from_game_select = 0 and from_create_select = 0 {
+			pos 160, 250 : mes "PLAY"
+			pos 160, 270 : mes "CLEATIVE MODE"
+			
+		} else : if from_game_select = 1 {
+			pos 160, 250 : mes "NORMAL GAME"
+			pos 160, 270 : mes "USER MAP GAME"
+			pos 160, 290 : mes "RETURN"
+	
+		} else : if from_create_select = 1 {
+			pos 160, 250 : mes "NEW MAP"
+			pos 160, 270 : mes "OPEN MAP"
+			pos 160, 290 : mes "RETURN"
+		}
+			
+			getkey upkey, 38
+			if upkey = 1 {
+				select --
+	
+				if select < 0 {
+					if from_game_select = 0 and from_create_select = 0 {
+						select = 1
+					} else {
+						select = 2
+					}
+				}
+			}
+			
+			getkey downkey, 40
+			if downkey = 1 {
+				select ++
+	
+				if select > 1 and from_game_select = 0 and from_create_select = 0 {
+					select = 0
+				} else : if select > 2 {
+					select = 0
+				}
+			}
+			
+	
+			getkey enterkey, 13
+		
+			if enterkey = 1 {
+				if from_game_select = 0 and from_create_select = 0 {
+					if select = 0 : goto *game_select
+					if select = 1 : goto *create_select
+				}
+				if from_game_select = 1 {
+					if select = 0 : goto *game_normal
+					if select = 1 : goto *game_open
+					if select = 2 : goto *return_to_title_menu
+				}
+				if from_create_select = 1 {
+					if select = 0 : goto *create_new_map
+					if select = 1 : goto *create_open_map
+					if select = 2 : goto *return_to_title_menu
+				}
+			}
+	
+		redraw 1
+	
+		wait 10
+	loop
+	
+	stop
+	
+*game_select
+	select = 0
+	
+	wait 50
+	
+	from_game_select = 1
+	goto *title_menu2
+	
+*create_select
+	select = 0
+	
+	wait 50
+	
+	from_create_select = 1
+	goto *title_menu2
+	
+*return_to_title_menu
+	wait 50
+	
+	goto *title_menu
+
+*game_normal
+	mode = "normal"
+	goto *game
+	
+*game_open
+	dialog "ecmap", 16, "タマゴトリ マップファイル"
+	
+	if stat = 0 {
+		stop
+	} else {
+	
+		opened_map_file = refstr
+		
+		notesel map
+		noteload opened_map_file
+	
+		noteget eggs_total_buf, 13
+		noteget cats_total_buf, 14
+		noteget best_record_buf, 15
+	
+		split eggs_total_buf, " : ", not_use, eggs_total
+		split cats_total_buf, " : ", not_use, cats_total
+		split best_record_buf, " : ", not_use, best_record
+	
+		eggs_total = int(eggs_total)
+		cats_total = int(cats_total)
+		best_record = int(best_record)
+	
+		mode = "user_map"
+		
+		goto *game
+	}
+
+/*ゲーム本編*/
+*game
+	clrobj
+	
+	buffer 9, 400, 330
+		pos 0, 0 : gcopy 0, 0, 0, 400, 300
+		gblur 3
+	
+	gsel 0
+	
+	/*タイル設置*/
+	
+		tile_x = -25
+		tile_y = 0
+		
+		tile_line = 0
+	
+		if mode = "normal" {
+	
+			if stage = 1 {
+	
+				score = 0
+	
+				if playing_file != "oo39_ys169.mp3" {
+					mci "close TamagoTori"													; 一旦閉じる
+				}
+				mci "open \""+dir+"\\bgm\\oo39_ys169.mp3\" alias TamagoTori"				; ファイルオープン
+				mci "play TamagoTori repeat"												; 再生
+				mci "setaudio TamagoTori volume to 200"										; 音量調節
+	
+				playing_file = "oo39_ys169.mp3"
+				
+				notesel map
+				noteload "maps/stage1.ecmap"
+				
+			}
+		
+			if stage = 2 {
+				notesel map
+				noteload "maps/stage2.ecmap"
+			}
+		
+			if stage = 3 {
+				notesel map
+				noteload "maps/stage3.ecmap"
+			}
+		
+			if stage = 4 {
+				notesel map
+				noteload "maps/stage4.ecmap"
+			}
+		
+			if stage = 5 {
+				notesel map
+				noteload "maps/stage5.ecmap"
+			}
+	
+			noteget eggs_total_buf, 13
+			noteget cats_total_buf, 14
+	
+			split eggs_total_buf, " : ", not_use, eggs_total
+			split cats_total_buf, " : ", not_use, cats_total
+	
+			eggs_total = int(eggs_total)
+			cats_total = int(cats_total)
+	
+			notesel best_record
+			noteload "maps/normal_game_best_record.dat"
+	
+			best_record = int(best_record)
+		}
+		
+	
+		buffer 10, 400, 300
+		
+			redraw 0
+			
+			repeat 16 * 12			; 1タイルあたり25px * 25pxで、横 400px / 25px = 16, 縦 300px / 25px = 12
+				
+				tile_x += 25
+			
+				if tile_x >= 400 {
+					tile_line ++
+			
+					tile_x = 0
+					tile_y += 25
+				}
+			
+				notesel map
+				noteget tile_type, tile_line
+			
+				the_tile = strmid (tile_type, (tile_x / 25), 1 )
+				
+				pos tile_x, tile_y : gmode 0
+					if the_tile = "0" {
+						gcopy 1, 0, 0, 25, 25
+					} else {
+						gcopy 2, 0, 0, 25, 25
+					}
+			
+				await 0.01
+			loop
+			
+			redraw 1
+	
+		gsel 0
+	
+		repeat 10
+			redraw 0
+			
+			pos 0, 0 : gcopy 9, 0, 0, 400, 330
+			pos 0, 0 : gmode 3,,,(cnt*25.5) :  gcopy 10, 0, 0, 400, 330
+	
+			color 0, 0, 0 : boxf 0, 300, 400, 330
+	
+			redraw 1
+			await 50
+		loop
+		
+	
+		if mode = "normal" {
+	
+			gmode 0
+			pos 0, 0 : gcopy 10, 0, 0, 400, 300
+			
+			color 255, 255, 255
+			cmes "STAGE "+stage+"", 0, 150, 400, 170
+	
+			wait 200
+	
+		}
+	
+		if mode = "user_map" {
+			score = 0
+	
+			if playing_file != "oo39_ys169.mp3" {
+				mci "close TamagoTori"													; 一旦閉じる
+			}
+			mci "open \""+dir+"\\bgm\\oo39_ys169.mp3\" alias TamagoTori"				; ファイルオープン
+			mci "play TamagoTori repeat"												; 再生
+			mci "setaudio TamagoTori volume to 200"										; 音量調節
+	
+			playing_file = "oo39_ys169.mp3"
+		}
+	
+*game_start
+	
+		gmode 0
+		pos 0, 0 : gcopy 10, 0, 0, 400, 300
+	
+		tile_line = 0
+	
+	/*タマゴ設置*/
+		remaining_eggs = eggs_total
+	
+		randomize
+	
+		dim egg_x, eggs_total
+		dim egg_y, eggs_total
+		
+		repeat eggs_total
+			egg_x(cnt) = rnd(16)
+			egg_y(cnt) = rnd(12)
+	
+			got_the_egg(cnt) = 0
+	
+			gmode 2
+			pos (egg_x(cnt) * 25), (egg_y(cnt) * 25) : gcopy 8, 0, 0, 25, 25
+	
+			await 0.1
+		loop
+	
+	/*敵キャラ設置*/
+		sdim cat_direction, cats_total
+		sdim cat_direction_side, cats_total
+		
+		dim cat_x, cats_total
+		dim cat_y, cats_total
+	
+		dim before_cat_x, cats_total
+		dim before_cat_y, cats_total
+	
+		randomize
+	
+		ccnt = 0
+		
+		repeat cats_total
+	
+			cd_rnd = rnd(4)
+	
+			if cd_rnd = 0 {
+				cat_direction(ccnt) = "right"
+				cat_direction_side(ccnt) = cat_direction(ccnt)
+			}
+			if cd_rnd = 1 {
+				cat_direction(ccnt) = "left"
+				cat_direction_side(ccnt) = cat_direction(ccnt)
+			}
+			if cd_rnd = 2 {
+				cat_direction(ccnt) = "up"
+				cat_direction_side(ccnt) = "right"
+			}
+			if cd_rnd = 3 {
+				cat_direction(ccnt) = "down"
+				cat_direction_side(ccnt) = "left"
+			}
+			
+			repeat
+	
+				cat_x(ccnt) = rnd(16) * 25
+				cat_y(ccnt) = rnd(12) * 25
+	
+				rnd_again = 0
+	
+				repeat eggs_total
+					
+					if (cat_x(ccnt)/25) = egg_x(cnt) and (cat_y(ccnt)/25) = egg_y(cnt) {
+						rnd_again = 1
+					}
+	
+					await 0.1
+				loop
+	
+				if rnd_again = 0 : break
+	
+				await 0.1
+			loop
+	
+			gmode 2
+				pos cat_x(ccnt), cat_y(ccnt) : gcopy 11, 0, 0, 25, 25
+	
+			ccnt++
+	
+			await 1
+		loop
+	
+	/*ゲーム動作*/
+		direction = "right"
+		
+		repeat
+	
+			if cnt \ 5 = 0 {
+	
+			/*ニワトリ操作*/
+				
+				redraw 0
+		
+				if direction = "right" {
+		
+					direction_side = direction
+			
+					notesel map
+					noteget before_tile_type, (before_chicken_y / 25)
+					noteget tile_type, (chicken_y / 25)
+	
+					/*前回のループ時にいたタイル*/
+	
+						before_the_tile = strmid (before_tile_type, (before_chicken_x / 25), 1 )
+	
+						pos before_chicken_x, before_chicken_y : gmode 0
+							if before_the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if before_the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos before_chicken_x + 5, before_chicken_y + 2 : mes before_the_tile
+							}
+	
+					/*今回の移動後のタイル*/
+						
+						the_tile = strmid (tile_type, (chicken_x / 25), 1 )
+					
+						pos chicken_x, chicken_y : gmode 0
+							if the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos chicken_x + 5, chicken_y + 2 : mes the_tile
+	
+								score += 1
+							}
+					
+					chicken_x += 25
+				}
+		
+				if direction = "left" {
+		
+					direction_side = direction
+			
+					notesel map
+					noteget before_tile_type, (before_chicken_y / 25)
+					noteget tile_type, (chicken_y / 25)
+	
+					/*前回のループ時にいたタイル*/
+	
+						before_the_tile = strmid (before_tile_type, (before_chicken_x / 25), 1 )
+	
+						pos before_chicken_x, before_chicken_y : gmode 0
+							if before_the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if before_the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos before_chicken_x + 5, before_chicken_y + 2 : mes before_the_tile
+							}
+	
+					/*今回の移動後のタイル*/
+						
+						the_tile = strmid (tile_type, (chicken_x / 25), 1 )
+					
+						pos chicken_x, chicken_y : gmode 0
+							if the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos chicken_x + 5, chicken_y + 2 : mes the_tile
+	
+								score += 1
+							}
+					
+					chicken_x -= 25
+				}
+				
+				if direction = "down" {
+			
+					notesel map
+					noteget before_tile_type, (before_chicken_y / 25)
+					noteget tile_type, (chicken_y / 25)
+	
+					/*前回のループ時にいたタイル*/
+	
+						before_the_tile = strmid (before_tile_type, (before_chicken_x / 25), 1 )
+	
+						pos before_chicken_x, before_chicken_y : gmode 0
+							if before_the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if before_the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos before_chicken_x + 5, before_chicken_y + 2 : mes before_the_tile
+							}
+	
+					/*今回の移動後のタイル*/
+						
+						the_tile = strmid (tile_type, (chicken_x / 25), 1 )
+					
+						pos chicken_x, chicken_y : gmode 0
+							if the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos chicken_x + 5, chicken_y + 2 : mes the_tile
+	
+								score += 1
+							}
+	
+					
+					chicken_y += 25
+				}
+				
+				if direction = "up" {
+			
+					notesel map
+					noteget before_tile_type, (before_chicken_y / 25)
+					noteget tile_type, (chicken_y / 25)
+	
+					/*前回のループ時にいたタイル*/
+	
+						before_the_tile = strmid (before_tile_type, (before_chicken_x / 25), 1 )
+	
+						pos before_chicken_x, before_chicken_y : gmode 0
+							if before_the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if before_the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos before_chicken_x + 5, before_chicken_y + 2 : mes before_the_tile
+							}
+	
+					/*今回の移動後のタイル*/
+						
+						the_tile = strmid (tile_type, (chicken_x / 25), 1 )
+					
+						pos chicken_x, chicken_y : gmode 0
+							if the_tile = "0" {
+								gcopy 1, 0, 0, 25, 25
+							} else : if the_tile = "1" {
+								gcopy 2, 0, 0, 25, 25
+							} else {
+								gcopy 2, 0, 0, 25, 25
+								color 255, 255, 255 : font "", 20
+								pos chicken_x + 5, chicken_y + 2 : mes the_tile
+	
+								score += 1
+							}
+					
+					chicken_y -= 25
+				}
+				
+			
+	
+	
+			/*敵キャラ操作*/
+	
+				ccnt = 0
+	
+				repeat cats_total
+				
+					if cat_direction(ccnt) = "right" {
+			
+						cat_direction_side(ccnt) = cat_direction(ccnt)
+						
+						notesel map
+						noteget cat_before_tile_type, (before_cat_y(ccnt) / 25)
+						noteget cat_tile_type, (cat_y(ccnt) / 25)
+						
+						/*前回のループ時にいたタイル*/
+		
+							cat_before_the_tile = strmid (cat_before_tile_type, (before_cat_x(ccnt) / 25), 1 )
+		
+							pos before_cat_x(ccnt), before_cat_y(ccnt) : gmode 0
+								if cat_before_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_before_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos before_cat_x(ccnt) + 5, before_cat_y(ccnt) + 2 : mes cat_before_the_tile
+								}
+							
+						/*今回の移動後のタイル*/
+							
+							cat_the_tile = strmid (cat_tile_type, (cat_x(ccnt) / 25), 1 )
+						
+							pos cat_x(ccnt), cat_y(ccnt) : gmode 0
+								if cat_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos cat_x(ccnt) + 5, cat_y(ccnt) + 2 : mes cat_the_tile
+								}
+						
+						cat_x(ccnt) += 25
+					}
+					
+					if cat_direction(ccnt) = "left" {
+			
+						cat_direction_side(ccnt) = cat_direction(ccnt)
+				
+						notesel map
+						noteget cat_before_tile_type, (before_cat_y(ccnt) / 25)
+						noteget cat_tile_type, (cat_y(ccnt) / 25)
+		
+						/*前回のループ時にいたタイル*/
+		
+							cat_before_the_tile = strmid (cat_before_tile_type, (before_cat_x(ccnt) / 25), 1 )
+		
+							pos before_cat_x(ccnt), before_cat_y(ccnt) : gmode 0
+								if cat_before_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_before_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos before_cat_x(ccnt) + 5, before_cat_y(ccnt) + 2 : mes cat_before_the_tile
+								}
+		
+						/*今回の移動後のタイル*/
+							
+							cat_the_tile = strmid (cat_tile_type, (cat_x(cnt) / 25), 1 )
+						
+							pos cat_x(ccnt), cat_y(ccnt) : gmode 0
+								if cat_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos cat_x(ccnt) + 5, cat_y(ccnt) + 2 : mes cat_the_tile
+								}
+						
+						cat_x(ccnt) -= 25
+					}
+					
+					if cat_direction(ccnt) = "down" {
+				
+						notesel map
+						noteget cat_before_tile_type, (before_cat_y(ccnt) / 25)
+						noteget cat_tile_type, (cat_y(ccnt) / 25)
+		
+						/*前回のループ時にいたタイル*/
+		
+							cat_before_the_tile = strmid (cat_before_tile_type, (before_cat_x(ccnt) / 25), 1 )
+		
+							pos before_cat_x(ccnt), before_cat_y(ccnt) : gmode 0
+								if cat_before_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_before_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos before_cat_x(ccnt) + 5, before_cat_y(ccnt) + 2 : mes cat_before_the_tile
+								}
+		
+						/*今回の移動後のタイル*/
+							
+							cat_the_tile = strmid (cat_tile_type, (cat_x(ccnt) / 25), 1 )
+						
+							pos cat_x(ccnt), cat_y(ccnt) : gmode 0
+								if cat_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos cat_x(ccnt) + 5, cat_y(ccnt) + 2 : mes cat_the_tile
+								}
+						
+						cat_y(ccnt) += 25
+					}
+					
+					if cat_direction(ccnt) = "up" {
+				
+						notesel map
+						noteget cat_before_tile_type, (before_cat_y(ccnt) / 25)
+						noteget cat_tile_type, (cat_y(ccnt) / 25)
+		
+						/*前回のループ時にいたタイル*/
+		
+							cat_before_the_tile = strmid (cat_before_tile_type, (before_cat_x(ccnt) / 25), 1 )
+		
+							pos before_cat_x(ccnt), before_cat_y(ccnt) : gmode 0
+								if cat_before_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_before_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos before_cat_x(ccnt) + 5, before_cat_y(ccnt) + 2 : mes cat_before_the_tile
+								}
+		
+						/*今回の移動後のタイル*/
+							
+							cat_the_tile = strmid (cat_tile_type, (cat_x(ccnt) / 25), 1 )
+						
+							pos cat_x(ccnt), cat_y(ccnt) : gmode 0
+								if cat_the_tile = "0" {
+									gcopy 1, 0, 0, 25, 25
+								} else : if cat_the_tile = "1" {
+									gcopy 2, 0, 0, 25, 25
+								} else {
+									gcopy 2, 0, 0, 25, 25
+									color 255, 255, 255 : font "", 20
+									pos cat_x(ccnt) + 5, cat_y(ccnt) + 2 : mes cat_the_tile
+								}
+						
+						cat_y(ccnt) -= 25
+					}
+	
+					ccnt++
+	
+					await 0.0001
+	
+				loop
+	
+				
+	
+			/*ニワトリが画面の端っこに来たときの動作*/
+				
+				if chicken_y <= 0 {
+		
+					chicken_y = 0
+		
+					if direction = "up" {
+						direction = "down"
+					}
+		
+				}
+		
+				if chicken_y >= 300 - 25 {
+		
+					chicken_y = 300 - 25
+		
+					if direction = "down" {
+						direction = "up"
+					}
+		
+				}
+				
+				if chicken_x <= 0 {
+		
+					chicken_x = 0
+					
+					if direction = "left" {
+						direction = "right"
+						direction_side = direction
+					}
+					
+				}
+				
+				if chicken_x >= 400 - 25 {
+		
+					chicken_x = 400 - 25
+					
+					if direction = "right" {
+						direction = "left"
+						direction_side = direction
+					}
+		
+				}
+	
+	
+			/*ニワトリを表示*/
+			pos chicken_x, chicken_y
+				if direction_side = "right" {
+					gmode 2 : gcopy 6, 0, 0, 25, 25
+				}
+				if direction_side = "left" {
+					gmode 2 : gcopy 7, 0, 0, 25, 25
+				}
+	
+			before_chicken_x = chicken_x
+			before_chicken_y = chicken_y
+	
+	
+			/*ネコが画面の端っこに来たときの動作*/
+	
+			repeat cats_total
+				
+				if cat_y(cnt) <= 0 {
+		
+					cat_y(cnt) = 0
+		
+					if cat_direction(cnt) = "up" {
+						cat_direction(cnt) = "down"
+					}
+		
+				}
+		
+				if cat_y(cnt) >= 300 - 25 {
+		
+					cat_y(cnt) = 300 - 25
+		
+					if cat_direction(cnt) = "down" {
+						cat_direction(cnt) = "up"
+					}
+		
+				}
+				
+				if cat_x(cnt) <= 0 {
+		
+					cat_x(cnt) = 0
+					
+					if cat_direction(cnt) = "left" {
+						cat_direction(cnt) = "right"
+						cat_direction_side(cnt) = cat_direction(cnt)
+					}
+					
+				}
+				
+				if cat_x(cnt) >= 400 - 25 {
+		
+					cat_x(cnt) = 400 - 25
+					
+					if cat_direction(cnt) = "right" {
+						cat_direction(cnt) = "left"
+						cat_direction_side(cnt) = cat_direction(cnt)
+					}
+		
+				}
+	
+				await 1
+			loop
+			
+	
+			/*ネコを表示*/
+			repeat cats_total
+	
+				pos cat_x(cnt), cat_y(cnt)
+					if cat_direction_side(cnt) = "right" {
+						gmode 2 : gcopy 11, 0, 0, 25, 25
+					}
+					if cat_direction_side(cnt) = "left" {
+						gmode 2 : gcopy 12, 0, 0, 25, 25
+					}
+				
+				if chicken_x = cat_x(cnt) and chicken_y = cat_y(cnt) {
+					score -= 5
+				}
+	
+				await 1
+			loop
+	
+			repeat cats_total
+				before_cat_x(cnt) = cat_x(cnt)
+				before_cat_y(cnt) = cat_y(cnt)
+	
+				await 1
+			loop
+	
+		}
+	
+	
+			/*タマゴ当たり判定*/
+			ecnt = 0
+			
+			repeat eggs_total
+				if chicken_x = (egg_x(ecnt) * 25) and chicken_y = (egg_y(ecnt) * 25) and got_the_egg(ecnt) != 1 {
+					got_the_egg(ecnt) = 1
+					score += 10
+	
+					remaining_eggs -= 1
+				}
+	
+				//猫にタマゴを取られた場合はスコアが下がる↓
+				repeat cats_total
+					if cat_x(cnt) = (egg_x(ecnt) * 25) and cat_y(cnt) = (egg_y(ecnt) * 25) and got_the_egg(ecnt) != 1 {
+						got_the_egg(ecnt) = 1
+						score -= 5
+	
+						remaining_eggs -= 1
+					}
+	
+					await 1
+				loop
+	
+				ecnt ++
+	
+				await 1
+			loop
+	
+			
+			/*スコア表示*/
+			color 0, 0, 0 : boxf 0, 300, 400, 330
+	
+			if score < 0 {
+				game_over = 1
+			}
+			
+			color 255, 255, 255 : font "", 16
+			if mode = "normal" {
+				pos 5, 305 : mes "Stage "+stage+"  Score "+score+""
+			}
+			if mode = "user_map" {
+				pos 5, 305 : mes "Score "+score+""
+			}
+	
+			if game_over = 1 {
+				color 255, 0, 0
+				cmes "GAME OVER", 0, 305, 400, 350
+				
+				wait 200
+	
+				score = 0
+				game_over = 0
+				
+				goto *title_menu
+			}
+			
+	
+			/*キー操作*/
+			getkey getkey_left, 37
+				if getkey_left = 1 {
+					direction = "left"
+				}
+	
+			getkey getkey_up, 38
+				if getkey_up = 1 {
+					direction = "up"
+				}
+	
+			getkey getkey_right, 39
+				if getkey_right = 1 {
+					direction = "right"
+				}
+	
+			getkey getkey_down, 40
+				if getkey_down = 1 {
+					direction = "down"
+				}
+	
+	
+			/*ネコの向きはランダム操作*/
+			repeat cats_total
+				cdrnd = rnd(8)
+	
+				if cdrnd = 0 {
+					cat_direction(cnt) = "right"
+				}
+				if cdrnd = 1 {
+					cat_direction(cnt) = "left"
+				}
+				if cdrnd = 2 {
+					cat_direction(cnt) = "up"
+				}
+				if cdrnd = 3 {
+					cat_direction(cnt) = "down"
+				}
+	
+				if cdrnd >= 4 {
+					cat_direction(cnt) = cat_direction(cnt)		; cdrnd = 4以上なら向きは変えない
+				}
+				
+				await 0.01
+			loop
+	
+	
+			/*タマゴの残りが0になったときの動作*/
+			if remaining_eggs = 0 and cnt \ 5 != 0 {
+				if stage = 5 or mode = "user_map" {
+					goto *result
+				} else {
+					stage ++
+					
+					goto *game
+				}
+			}
+			
+	
+			redraw 1
+			
+			wait 10
+	
+		loop
+	
+	stop
+	
+*result
+	gblur 2
+	
+	font "", 14
+	cmes "Score "+score+"", 0, 150, 400, 170
+	
+	if score > best_record {
+		cmes "最高記録更新！", 0, 170, 400, 190
+	
+		if mode = "normal" {
+			score_buf = str(score)
+			notesel score_buf
+			notesave "maps/normal_game_best_record.dat"
+		} else {
+			notesel map
+			noteadd "Best Record : "+score+"", 15, 1
+			notesave opened_map_file
+		}
+	}
+	
+	cmes "・ Return", 0, 250, 400, 270
+	
+	repeat
+		getkey enterkey, 13
+	
+		if enterkey = 1 {
+			wait 10
+			goto *title_menu
+		}
+	
+		wait 1
+	loop
+	
+	stop
+	
+*create_new_map
+	clrobj
+	
+	mci "close TamagoTori"
+	
+	create_map = {"
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	0000000000000000
+	
+	Eggs_total : 0
+	Cats_total : 0
+	Best_Record : 0
+	"}
+	
+	eggs_total = 0
+	cats_total = 0
+	best_record = 0
+	
+	goto *create_2
+	
+*create_open_map
+	clrobj
+	
+	mci "close TamagoTori"
+	
+	dialog "ecmap", 16, "タマゴトリ マップファイル"
+	
+	if stat = 0 {
+		stop
+	} else {
+		
+		notesel create_map
+		noteload refstr
+	
+		noteget eggs_total_buf, 13
+		noteget cats_total_buf, 14
+		noteget best_record_buf, 15
+		
+		split eggs_total_buf, " : ", not_use, eggs_total
+		split cats_total_buf, " : ", not_use, cats_total
+		split best_record_buf, " : ", not_use, best_record
+	
+		eggs_total = int(eggs_total)
+		cats_total = int(cats_total)
+		best_record = int(best_record)
+		
+		goto *create_2
+	}
+	
+*create_2
+	redraw 0
+	
+	color : boxf
+	
+	tile_x = 0
+	tile_y = 0
+	
+	repeat 16 * 12
+	
+		notesel create_map
+		noteget tile_type, (tile_y / 25)
+		
+		the_tile = strmid (tile_type, (tile_x / 25), 1 )
+	
+		gmode 0
+		if the_tile = "0" {
+			pos tile_x, tile_y : gcopy 1, 0, 0, 25, 25
+		} else : if the_tile = "1" {
+			pos tile_x, tile_y : gcopy 2, 0, 0, 25, 25
+		} else {
+			pos tile_x, tile_y : gcopy 2, 0, 0, 25, 25
+			color 255, 255, 255 : font "", 20
+			pos tile_x + 5, tile_y + 2 : mes the_tile
+		}
+	
+		tile_x += 25
+		if tile_x >= (16*25) {
+			tile_x = 0
+			tile_y += 25
+		}
+	
+		await 1
+	loop
+	
+	font "", 10 : color 255, 255, 255
+	pos 5, 310 : mes "左クリック：タイルの色を変える　右クリック：選択したタイルに表示する文字を設定"
+	
+	objsize 45, 20 : objimage -1
+	pos 350, 305 : button "Save", *create_save
+	
+	redraw 1
+	
+	onclick gosub *create_onclick
+	
+	stop
+	
+*create_onclick
+	if mousey > 300 {
+		return
+	}
+	
+	clicked_tile_x = mousex / 25
+	clicked_tile_y = mousey / 25
+	
+	getkey mouse_key_left, 1
+	getkey mouse_key_right, 2
+	
+	
+	if mouse_key_left = 1 {
+		
+		notesel create_map
+		noteget tile_type, clicked_tile_y
+		
+		the_tile = strmid (tile_type, clicked_tile_x, 1 )
+		
+		if the_tile = "0" {
+		
+			noteadd_the_tile = ""
+			
+			repeat 16
+			
+				if cnt = clicked_tile_x {
+					noteadd_the_tile = ""+noteadd_the_tile+"1"
+				} else {
+					noteadd_the_tile = ""+noteadd_the_tile+""+strmid (tile_type, cnt, 1 )+""
+				}
+		
+				await 1
+			loop
+			
+			notesel create_map
+			noteadd str(noteadd_the_tile), clicked_tile_y, 1
+			
+			pos (clicked_tile_x * 25), (clicked_tile_y * 25) : gcopy 2, 0, 0, 25, 25
+		
+		} else {
+		
+			noteadd_the_tile = ""
+		
+			repeat 16
+			
+				if cnt = clicked_tile_x {
+					noteadd_the_tile = ""+noteadd_the_tile+"0"
+				} else {
+					noteadd_the_tile = ""+noteadd_the_tile+""+strmid (tile_type, cnt, 1 )+""
+				}
+		
+				await 1
+			loop
+			
+			notesel create_map
+			noteadd noteadd_the_tile, clicked_tile_y, 1
+			
+			pos (clicked_tile_x * 25), (clicked_tile_y * 25) : gcopy 1, 0, 0, 25, 25
+		
+		}
+	
+	}
+	
+	if mouse_key_right = 1 {
+		clrobj
+		input_word = ""
+		
+		pos (clicked_tile_x * 25), (clicked_tile_y * 25) : gcopy 2, 0, 0, 25, 25
+	
+		color 0, 0, 0 : boxf 0, 300, 400, 330
+	
+		color 255, 255, 255 : font "", 10
+		pos 5, 310 : mes "選択したタイルに表示する文字を入力してください（半角英数字・カナ1文字）："
+		objsize 35, 20
+		pos 330, 305 : input input_word
+		objsize 30, 20
+		pos 365, 305 : button gosub "OK", *after_input_word
+	}
+	
+	return
+	
+*after_input_word
+	if input_word = "" : input_word = "1"
+	
+	notesel create_map
+	noteget tile_type, clicked_tile_y
+		
+	the_tile = strmid (tile_type, clicked_tile_x, 1 )
+		
+	noteadd_the_tile = ""
+		
+	repeat 16
+			
+		if cnt = clicked_tile_x {
+			noteadd_the_tile = ""+noteadd_the_tile+""+input_word+""
+		} else {
+			noteadd_the_tile = ""+noteadd_the_tile+""+strmid (tile_type, cnt, 1 )+""
+		}
+			
+		await 1
+	loop
+		
+	notesel create_map
+	noteadd str(noteadd_the_tile), clicked_tile_y, 1
+		
+	pos (clicked_tile_x * 25), (clicked_tile_y * 25) : gcopy 2, 0, 0, 25, 25
+	color 255, 255, 255 : font "", 20
+	if input_word != "1" {
+		pos (clicked_tile_x * 25) + 5, (clicked_tile_y * 25) + 2 : mes input_word
+	}
+	
+	clrobj
+	goto *create_2
+	
+*create_save
+	clrobj
+	
+	gblur 2
+	
+	randomize
+	if eggs_total = 0 {
+		eggs_total = rnd(10)
+	}
+	if cats_total = 0 {
+		cats_total = rnd(7)
+	}
+	
+	color 255, 255, 255
+	objsize 20, 20
+	
+	pos 120, 100 : mes "タマゴの数"
+	pos 250, 100 : input eggs_total
+	
+	pos 120, 150 : mes "敵（ネコ）の数"
+	pos 250, 150 : input cats_total
+	
+	objimage 5 : objsize 100, 20
+	pos 150, 200 : button "OK", *create_save_2
+	
+	stop
+	
+*create_save_2
+	dialog "ecmap", 17, "タマゴトリ マップファイル"
+	
+	if stat != 0 {
+		savedata_name = refstr
+		if instr(savedata_name, 0, ".ecmap") = -1 {
+			savedata_name = ""+savedata_name+".ecmap"
+		}
+		
+		notesel create_map
+		noteadd "Eggs_total : "+eggs_total+"", 13, 1
+		noteadd "Cats_total : "+cats_total+"", 14, 1
+		noteadd "Best_record : "+best_record+"", 15, 1
+		notesave savedata_name
+	}
+	
+	goto *title_menu
+
+/*ウィンドウを閉じたときの動作*/
+*exit
+	mci "close TamagoTori"
+	
+	end

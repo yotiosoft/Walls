@@ -1,0 +1,26 @@
+#module
+#defcfunc get_chapter var underlying_var, str search_chapter, str punctuate, str end_word	;各項目の読み込み（使用例：get_chapter(元の変数, "検索する項目", "始点区切りコード", "終端コード") ）
+	value = instr(underlying_var, 0, search_chapter)
+	get_chapter_buf = strmid ( underlying_var, value + strlen(""+search_chapter+""+punctuate+""), instr(underlying_var, value + strlen(""+search_chapter+""+punctuate+""), end_word) )
+	
+	return get_chapter_buf
+#global
+
+	notesel about_run_buf
+	noteload "about.aax"
+	
+	repeat 3
+		noteget about_run_buf, cnt
+		
+		if instr(about_run_buf, 0, "Title") != -1 {
+			about_run__Title = get_chapter(about_run_buf, "Title", " = \"", "\";")
+		}
+		if instr(about_run_buf, 0, "Size_X") != -1 {
+			about_run__Size_X = int( get_chapter(about_run_buf, "Size_X", " = ", ";") )
+		}
+		if instr(about_run_buf, 0, "Size_Y") != -1 {
+			about_run__Size_Y = int( get_chapter(about_run_buf, "Size_Y", " = ", ";") )
+		}
+	loop
+	
+	mes "test.ax実行中...\n\nタイトル："+about_run__Title+"\nウィンドウサイズX："+about_run__Size_X+"\nウィンドウサイズY："+about_run__Size_Y+""
