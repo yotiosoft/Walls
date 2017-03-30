@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6004
+									　Version RM 6.0 / Build 6005
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -945,6 +945,9 @@
 		WindowSize_Y = about_ax__Size_Y +32+1
 		
 		windowmake wID, WindowSize_X, WindowSize_Y, 1
+	
+		notesel window_data
+		noteadd "1", (wID-first_wID), 1
 		
 		onclick gosub *on_click
 	
@@ -1074,28 +1077,32 @@
 	/*子ウィンドウを動かす以外の目的でクリックされたときの動作*/
 	
 	//親ウィンドウ
-		gsel 0
+		GetFocusA : Focus_hand = stat
 		
-		//スタートメニュー
-			if click_range(0, scy-30, 32, scy) {
-				gosub *startmenu
-				return
-			}
-		
-		//ダッシュボード
-			if click_range(scx-70, scy-30, scx, scy) {
-				gosub *dashboard
-				return
-			}
-	
-		//デスクトップ画面（*desktop_screen）のアイコン
-			GetFocusA : Focus_hand = stat
+		if Focus_hand = parent_hwnd {
+			gsel 0
 			
-			if click_range(10, 10, 10+48, 10+48) and now != "File_Explorer" and parent_hwnd = Focus_hand {
-				if covered(mousex,mousey) = "desktop_screen" {
-					goto *File_Explorer
+			//スタートメニュー
+				if click_range(0, scy-30, 32, scy) {
+					gosub *startmenu
+					return
 				}
-			}
+			
+			//ダッシュボード
+				if click_range(scx-70, scy-30, scx, scy) {
+					gosub *dashboard
+					return
+				}
+		
+			//デスクトップ画面（*desktop_screen）のアイコン
+				GetFocusA : Focus_hand = stat
+				
+				if click_range(10, 10, 10+48, 10+48) and now != "File_Explorer" and parent_hwnd = Focus_hand {
+					if covered(mousex,mousey) = "desktop_screen" {
+						goto *File_Explorer
+					}
+				}
+		}
 	
 	//エクスプローラー（*File_Explorer）
 		//エクスプローラーのウィンドウにフォーカスがあるか確認
