@@ -1,50 +1,75 @@
 ; Walls Luxor Buffer.hsp
+	buffer_things = ""
+	
+//読み込むファイルをbuffer_thingsに書き込む
+	notesel buffer_things
+	noteadd "", 0, 1
+	
+//Walls ロゴ
+	noteadd "icons/logo.png", 1, 1
+	
+//スタートボタン
+	noteadd "buttons/startmenu/startmenu.png", 2, 1
+	
+//ユーザーアイコン
+	noteadd "userimages/u1.png", 3, 1
+	noteadd "userimages/u2.png", 4, 1
+	noteadd "userimages/u3.png", 5, 1
+	noteadd "userimages/u4.png", 6, 1
+	noteadd "userimages/u5.png", 7, 1
+	noteadd "userimages/u6.png", 8, 1
+	noteadd "userimages/u7.png", 9, 1
+	noteadd "userimages/u8.png", 10, 1
+	noteadd "userimages/u9.png", 11, 1
+	noteadd "userimages/u10.png", 12, 1
+	
+//壁紙（デフォルト）
+	noteadd "wallpapers/default/wallpaper1.JPG", 13, 1
+	noteadd "wallpapers/default/wallpaper2.JPG", 14, 1
+	noteadd "wallpapers/default/wallpaper3.JPG", 15, 1
+	noteadd "wallpapers/default/wallpaper4.JPG", 16, 1
+	noteadd "wallpapers/default/wallpaper5.JPG", 17, 1
+	
+//→ボタン
+	noteadd "buttons/login/next.png", 18, 1
+	
+//エクスプローラーで使うアイコン
+	noteadd "icons/explorer/folder.png", 19, 1	; フォルダアイコン
+	noteadd "icons/explorer/drive.png", 20, 1	; ドライブアイコン
+	noteadd "icons/explorer/file.png", 21, 1	; ファイルアイコン
+	noteadd "icons/explorer/ax.png", 22, 1		; axファイルアイコン
+	noteadd "icons/explorer/exe.png", 23, 1		; exeファイルアイコン
+	noteadd "icons/explorer/text.png", 24, 1	; テキストファイルアイコン
+	
+//最小化ボタン・閉じるボタン
+	noteadd "buttons/window_titlebar/_.png", 25, 1	; 最小化ボタン
+	noteadd "buttons/window_titlebar/x.png", 26, 1	; 閉じるボタン
+	
+//デスクトップ画面に表示するアイコン
+	noteadd "icons/desktop_screen/pc.png", 27, 1	; マイコンピュータ
 	
 //System/Computer にディレクトリ移動
 	chdir "System/Computer/C@Drive/walls/img/"
-
-//Walls ロゴ
-	celload "icons/logo.png", 1
 	
-//スタートボタン
-	celload "buttons/startmenu/startmenu.png", 2
+//読み込み開始
+	notesel buffer_things
+	notemax_buf = notemax
 	
-//ユーザーアイコン
-	celload "userimages/u1.png", 3
-	celload "userimages/u2.png", 4
-	celload "userimages/u3.png", 5
-	celload "userimages/u4.png", 6
-	celload "userimages/u5.png", 7
-	celload "userimages/u6.png", 8
-	celload "userimages/u7.png", 9
-	celload "userimages/u8.png", 10
-	celload "userimages/u9.png", 11
-	celload "userimages/u10.png", 12
+	repeat notemax_buf
+		notesel buffer_things
+		noteget buffer_thing, cnt
 	
-//壁紙（デフォルト）
-	celload "wallpapers/default/wallpaper1.JPG", 13
-	celload "wallpapers/default/wallpaper2.JPG", 14
-	celload "wallpapers/default/wallpaper3.JPG", 15
-	celload "wallpapers/default/wallpaper4.JPG", 16
-	celload "wallpapers/default/wallpaper5.JPG", 17
+		if cnt != 0 {
+			celload buffer_thing, cnt
+		}
 	
-//→ボタン
-	celload "buttons/login/next.png", 18
+		gsel 0
 	
-//エクスプローラーで使うアイコン
-	celload "icons/explorer/folder.png", 19	; フォルダアイコン
-	celload "icons/explorer/drive.png", 20	; ドライブアイコン
-	celload "icons/explorer/file.png", 21	; ファイルアイコン
-	celload "icons/explorer/ax.png", 22		; axファイルアイコン
-	celload "icons/explorer/exe.png", 23	; exeファイルアイコン
-	celload "icons/explorer/text.png", 24	; テキストファイルアイコン
+		color 255, 255, 255
+		boxf (scx/2)-100, (scy/2)+50, double(((scx/2)-100)+(double(cnt)/(notemax_buf-1)*200)), (scy/2)+55
 	
-//最小化ボタン・閉じるボタン
-	celload "buttons/window_titlebar/_.png", 25	; 最小化ボタン
-	celload "buttons/window_titlebar/x.png", 26	; 閉じるボタン
-	
-//デスクトップ画面に表示するアイコン
-	celload "icons/desktop_screen/pc.png", 27	; マイコンピュータ
+		wait 1
+	loop
 	
 //ディレクトリを戻す
 	chdir default_dir

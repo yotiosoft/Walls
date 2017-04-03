@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6005
+									　Version RM 6.0 / Build 6006
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -141,6 +141,7 @@
 /*タスクバー表示*/
 #deffunc taskbar int ltx, int lty, int rbx, int rby
 	time = ""+gettime(4)+":"+strf("%02d", gettime(5))+""
+	time@ = time
 	
 	//まだタスクバーを表示していない場合
 		if displayed_taskbar@ = 0 {
@@ -267,8 +268,8 @@
 	
 	phwnd@.wID = hwnd
 	windows@=windows@+1		;子ウィンドウの総数
-	windowx@=windowx
-	windowy@=windowy
+	scx@=windowx
+	scy@=windowy
 	
 	SetParent phwnd@.wID,phwnd@.0
 	
@@ -436,8 +437,6 @@
 		window_data = ""
 		
 		new_eID = -1
-		
-		windowx = 1024 : windowy = 576
 		
 		systemfont = "Meiryo"
 		
@@ -710,21 +709,23 @@
 	now = "dashbord"
 	
 	if displayed_dashboard = 0 {
-		repeat 128
-			redraw 0
 			
-			gmode 0
-			pos scx-200, scy-200-30 : gcopy 999, scx-200, scy-200-30, 200, 200
-			
-			gmode 3,,,(cnt/2)
-			color 0, 0, 0 : sboxf 128, scx-200, scy-30-200, scx, scy-30
+		gmode 3,,,255
+		color 0, 0, 0 : sboxf 100, scx-200, scy-30-200, scx, scy-30
 	
-			redraw 1
-			await 1
-		loop
+	
+		//ダッシュボードの内容を表示
+			font systemfont, 14 : color 255, 255, 255
+			pos scx-200+10, scy-30-200+10 : mes ""+gettime(0)+"年"+gettime(1)+"月"+gettime(3)+"日"
 		
-		font systemfont, 14 : color 255, 255, 255
-		pos scx-200+10, scy-30-200+10 : mes ""+gettime(0)+"年"+gettime(1)+"月"+gettime(3)+"日"
+			font systemfont, 26
+			pos scx-200+15, scy-30-200+30 : mes ""+time+""
+	
+			color 200, 200, 200
+			line scx-200+10, scy-30-200+70, scx-10, scy-30-200+70
+	
+			font systemfont, 12 : color 255, 255, 255
+			cmes "通知はありません", scx-200, scy-30-200+80, scx, scy-30-200+100
 	
 		displayed_dashboard = 1
 		
