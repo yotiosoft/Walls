@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6006
+									　Version RM 6.0 / Build 6007
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -292,40 +292,41 @@
 	/*ここから起動画面*/
 		color 0,0,0 : boxf
 	
-		repeat 51
+		chdir "System/Computer/C@Drive/walls/img/"
+		celload "icons/title.png", 28
+		celload "bar/loading_200px.png", 29
+		celload "wallpapers/default/sunset-123926_1920.jpg", 30
+	
+		repeat 32
 			redraw 0
+	
+			gmode 3,,,cnt
+			pos 0, 0 : gzoom scx, scy, 30, 0, 0, 1920, 1077
+	
+			color 0, 0, 0 : sboxf 255-(cnt*8), 0, 0, scx, scy
+			gblur 5
 			
-			color 0, 0,  : boxf
-			color 0, 100, 255
-			sboxf (cnt*5), 0, 0, scx, scy
-		
 			redraw 1
-			await 10
+			await 1
 		loop
 	
 	rad = double(0.00)
 	
-	repeat
-		redraw 0
-	
-		rad += 0.05
-		
-		color 0, 162, 232
-		boxf cos(rad)*1024+1024, 0, scx, scy
-	
-		if cos(rad)*1024+1024 < 0.1 {
-			break
-		}
-	
-		redraw 1
-		await 10
-	loop
-	
 *boot_loading
 	gsel 0
 	
-	color 255,255,255
-	cmes "Loading...", 0, scy/2-10, scx, scy/2+10
+	repeat 32
+		redraw 0
+		pos 0, 0 : gzoom scx, scy, 30, 0, 0, 1920, 1077 : gblur 5
+		
+		color 255, 255, 255 : gmode 4, 388, 124, cnt*8
+		pos scx/2-(388/2), scy/2-124 : gcopy 28, 0, 0, 388, 124
+		
+		redraw 1
+		await 1
+	loop
+	
+	chdir default_dir
 	
 	/*ここでファイルを読み込む*/
 	/*画像ファイル読み込み*/
@@ -619,8 +620,18 @@
 		}
 	
 	//タスクバー表示
+		before_time = time
+		
 		repeat
 			color 0, 0, 0 : taskbar 0, scy-30, scx, scy
+	
+			if displayed_dashboard = 1 and before_time != time {
+				from_desktop_screen_2 = 1
+				gosub *dashboard
+			}
+	
+			before_time = time
+			
 			wait 1
 		loop
 	
@@ -708,11 +719,18 @@
 *dashboard
 	now = "dashbord"
 	
-	if displayed_dashboard = 0 {
-			
+	if displayed_dashboard = 0 or ( from_desktop_screen_2 = 1 and displayed_dashboard = 1 ) {
+	
+		displayed_dashboard = 1
+		from_desktop_screen_2 = 0
+	
+		redraw 0
+	
+		gmode 0
+		pos scx-200, scy-30-200 : gcopy 999, scx-200, scy-30-200, scx, scy-30
+		
 		gmode 3,,,255
 		color 0, 0, 0 : sboxf 100, scx-200, scy-30-200, scx, scy-30
-	
 	
 		//ダッシュボードの内容を表示
 			font systemfont, 14 : color 255, 255, 255
@@ -727,14 +745,14 @@
 			font systemfont, 12 : color 255, 255, 255
 			cmes "通知はありません", scx-200, scy-30-200+80, scx, scy-30-200+100
 	
-		displayed_dashboard = 1
+		redraw 1
 		
 		return
 	}
 	
-	if displayed_dashboard = 1 {
+	if displayed_dashboard = 1 and from_desktop_screen_2 = 0 {
 		buffering 0, 998
-	
+		
 		displayed_dashboard = 0
 	
 		repeat 128

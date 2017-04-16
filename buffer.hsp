@@ -59,15 +59,15 @@
 		notesel buffer_things
 		noteget buffer_thing, cnt
 	
-		if cnt != 0 {
+		if cnt != 0 and buffer_thing != "" {
 			celload buffer_thing, cnt
 		}
 	
 		gsel 0
 	
-		color 255, 255, 255
-		boxf (scx/2)-100, (scy/2)+50, double(((scx/2)-100)+(double(cnt)/(notemax_buf-1)*200)), (scy/2)+55
-	
+		gmode 2
+		pos (scx/2)-100, (scy/2)+50 : gcopy 29, 0, 0, double(cnt)/(notemax_buf-1)*200, 5
+		
 		wait 1
 	loop
 	
