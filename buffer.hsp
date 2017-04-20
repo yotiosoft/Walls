@@ -46,7 +46,13 @@
 	noteadd "buttons/window_titlebar/x.png", 26, 1	; 閉じるボタン
 	
 //デスクトップ画面に表示するアイコン
-	noteadd "icons/desktop_screen/pc.png", 27, 1	; マイコンピュータ
+	noteadd "icons/desktop_screen/pc.png", 27, 1		; マイコンピュータ
+	noteadd "icons/desktop_screen/setting.png", 28, 1	; 設定
+	
+//設定で使うアイコン
+	noteadd "icons/settings/main.png", 29, 1			; メインメニュー
+	noteadd "icons/settings/user.png", 30, 1			; ユーザー設定
+	noteadd "icons/settings/design.png", 31, 1			; デザイン設定
 	
 //System/Computer にディレクトリ移動
 	chdir "System/Computer/C@Drive/walls/img/"
@@ -66,7 +72,7 @@
 		gsel 0
 	
 		gmode 2
-		pos (scx/2)-100, (scy/2)+50 : gcopy 29, 0, 0, double(cnt)/(notemax_buf-1)*200, 5
+		pos (scx/2)-100, (scy/2)+50 : gcopy 10002, 0, 0, double(cnt)/(notemax_buf-1)*200, 5
 		
 		wait 1
 	loop

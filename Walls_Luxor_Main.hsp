@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6007
+									　Version RM 6.0 / Build 6008
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -286,6 +286,19 @@
 	
 	return get_chapter_buf
 	
+/*ハンドル値からwIDの取得（使用例：get_wID(アクティブなウィンドウのハンドル値) ）*/
+#defcfunc get_wID int hwnd_buf
+	repeat new_wID@ - first_wID@ - 1
+		i = cnt+first_wID@
+		
+		if phwnd@(i) = hwnd_buf {
+			wID_buf = i
+			break
+		}
+	loop
+	
+	return wID_buf
+	
 #global
 	
 *boot
@@ -293,15 +306,15 @@
 		color 0,0,0 : boxf
 	
 		chdir "System/Computer/C@Drive/walls/img/"
-		celload "icons/title.png", 28
-		celload "bar/loading_200px.png", 29
-		celload "wallpapers/default/sunset-123926_1920.jpg", 30
+		celload "icons/title.png", 10001
+		celload "bar/loading_200px.png", 10002
+		celload "wallpapers/default/sunset-123926_1920.jpg", 10003
 	
 		repeat 32
 			redraw 0
 	
 			gmode 3,,,cnt
-			pos 0, 0 : gzoom scx, scy, 30, 0, 0, 1920, 1077
+			pos 0, 0 : gzoom scx, scy, 10003, 0, 0, 1920, 1077
 	
 			color 0, 0, 0 : sboxf 255-(cnt*8), 0, 0, scx, scy
 			gblur 5
@@ -317,10 +330,10 @@
 	
 	repeat 32
 		redraw 0
-		pos 0, 0 : gzoom scx, scy, 30, 0, 0, 1920, 1077 : gblur 5
+		pos 0, 0 : gzoom scx, scy, 10003, 0, 0, 1920, 1077 : gblur 5
 		
 		color 255, 255, 255 : gmode 4, 388, 124, cnt*8
-		pos scx/2-(388/2), scy/2-124 : gcopy 28, 0, 0, 388, 124
+		pos scx/2-(388/2), scy/2-124 : gcopy 10001, 0, 0, 388, 124
 		
 		redraw 1
 		await 1
@@ -605,8 +618,15 @@
 		loop
 		
 	//ショートカット、ウィジェット配置
-		//とりあえずエクスプローラーのアイコンのみ
-			pos 10, 10 : gmode 2 : gcopy 27, 0, 0, 48, 48
+		font systemfont, 12
+		
+		//マイコンピュータ
+			pos 10, 10 : gmode 2 : gcopy 27, 0, 0, 64, 64
+			cmes "PC", 10, 10+55, 10+64, 10+70
+			
+		//設定
+			pos 10, 80 : gmode 2 : gcopy 28, 0, 0, 64, 64
+			cmes "設定", 10, 80+55, 10+64, 80+70
 	
 	//画面をバッファ
 		if sub = 0 {
@@ -785,6 +805,9 @@
 	now = "File_Explorer"
 	wID = new_wID
 	
+	notesel type_of_wID
+	noteadd ""+now+"", wID, 1
+	
 	new_eID += 1
 	eID = new_eID
 	
@@ -960,6 +983,9 @@
 	//ウィンドウ作成
 		wID = new_wID
 	
+		notesel type_of_wID
+		noteadd ""+now+"", wID, 1
+	
 		WindowSize_X = about_ax__Size_X +2
 		WindowSize_Y = about_ax__Size_Y +32+1
 		
@@ -1010,6 +1036,81 @@
 	exec text_file, 16
 	
 	stop
+	
+/*------------------------------------------------------------設定-------------------------------------------------------------------*/
+
+*Settings
+	/*設定ウィンドウ*/
+	now = "Settings"
+	
+	//ウィンドウ作成
+		wID = new_wID
+	
+		notesel type_of_wID
+		noteadd ""+now+"", wID, 1
+	
+		WindowSize_X = 800
+		WindowSize_Y = 500
+		
+		windowmake wID, WindowSize_X, WindowSize_Y, 1
+	
+		notesel window_data
+		noteadd "1", (wID-first_wID), 1
+		
+		onclick gosub *on_click
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button gosub "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button gosub "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+	//タイトルバー及び枠
+		color 0, 61, 51 : boxf
+	
+		color 255, 255, 255
+		cmes "設定", 0, 10, 800+2, 32
+	
+	//設定のメインメニューを開く
+		color 239, 239, 239 : boxf 1, 40, WindowSize_X-2, WindowSize_Y-1
+	
+		rad = 1.00
+		
+		repeat
+			rad -= 0.05
+			color 0, 105, 92 : boxf 1, 40, cos(rad)*200, WindowSize_Y-1
+	
+			if cos(rad)*200 >= 199 {
+				break
+			}
+			wait 1
+		loop
+	
+		color 0, 105, 92 : boxf 1, 40, cos(rad)*200, WindowSize_Y-1
+	
+	//左側のメニューに項目を表示させる
+		font systemfont, 18
+		color 255, 255, 255
+	
+		pos 10, 50 : gmode 2 : gcopy 29, 0, 0, 32, 32
+		pos 45, 53 : mes "メインメニュー"
+	
+		pos 10, 90 : gmode 2 : gcopy 30, 0, 0, 32, 32
+		pos 45, 93 : mes "ユーザー設定"
+	
+		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
+		pos 45, 133 : mes "デザイン設定"
+	
+	stop
+	
+*Settings__User
+	end
+	
+*Settings__Design
+	end
 	
 /*-------------------------------------------------------ウィンドウ操作--------------------------------------------------------------*/
 	
@@ -1064,19 +1165,19 @@
 	//まず子ウィンドウを動かす以外の目的でクリックされていないか確認
 		gosub *clicked_on_other_than_windows
 	
+	//現在アクティブな子ウィンドウを検出（どのウィンドウを動かすか）
+		GetFocusA : Focus_hand = stat
+		
 	//現在アクティブなウィンドウが親ウィンドウならreturn
-		if hwnd = parent_hwnd {
+		if Focus_hand = parent_hwnd {
 			return
 		}
 	
 	//子ウィンドウを動かす
 		now = "on_click"
-	
-		;現在アクティブな子ウィンドウを検出（どのウィンドウを消すか）
-			GetFocusA : Focus_hand = stat
 		
 			gsel 0
-			title "Focus_hand="+Focus_hand+""
+			title ""+parent_hwnd+" Focus_hand="+WindowFromPointA( ginfo(0), ginfo(1) )+""
 		
 		;現在アクティブな子ウィンドウを検出
 			repeat new_wID - 1
@@ -1095,9 +1196,14 @@
 *clicked_on_other_than_windows
 	/*子ウィンドウを動かす以外の目的でクリックされたときの動作*/
 	
-	//親ウィンドウ
+	//アクティブなウィンドウのハンドル値を取得
 		GetFocusA : Focus_hand = stat
 		
+	//現在アクティブなウィンドウが何のウィンドウかを取得
+		;notesel type_of_wID
+		;noteget type_of_wID__buf, get_wID(Focus_hand)
+		
+	//親ウィンドウ上での動作
 		if Focus_hand = parent_hwnd {
 			gsel 0
 			
@@ -1116,9 +1222,15 @@
 			//デスクトップ画面（*desktop_screen）のアイコン
 				GetFocusA : Focus_hand = stat
 				
-				if click_range(10, 10, 10+48, 10+48) and now != "File_Explorer" and parent_hwnd = Focus_hand {
+				if click_range(10, 10, 10+64, 10+70) and now != "File_Explorer" and now!= "run_ax" and now != "Settings" and parent_hwnd = Focus_hand {
 					if covered(mousex,mousey) = "desktop_screen" {
 						goto *File_Explorer
+					}
+				}
+	
+				if click_range(10, 80, 10+64, 80+70) and now != "File_Explorer" and now!= "run_ax" and now != "Settings" and parent_hwnd = Focus_hand {
+					if covered(mousex,mousey) = "desktop_screen" {
+						goto *Settings
 					}
 				}
 		}
@@ -1169,7 +1281,20 @@
 					
 					goto *File_Explorer__draw
 				}
+		
+		}
 	
+	//設定（*settings）
+		if now = "Settings" {
+			if click_range(10, 50, 100, 90) = 1 {
+				gosub *Settings
+			}
+			if click_range(10, 90, 100, 130) = 1 {
+				gosub *Settings__User
+			}
+			if click_range(10, 130, 100, 170) = 1 {
+				gosub *Settings__Design
+			}
 		}
 	
 	return
