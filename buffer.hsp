@@ -1,6 +1,8 @@
 ; Walls Luxor Buffer.hsp
 	buffer_things = ""
 	
+	now_sourcecode = "buffer.hsp"		; 現在読み込んでいるソースコード
+	
 //読み込むファイルをbuffer_thingsに書き込む
 	notesel buffer_things
 	noteadd "", 0, 1
@@ -53,6 +55,9 @@
 	noteadd "icons/settings/main.png", 29, 1			; メインメニュー
 	noteadd "icons/settings/user.png", 30, 1			; ユーザー設定
 	noteadd "icons/settings/design.png", 31, 1			; デザイン設定
+	
+	noteadd "icons/settings/user_64px.png", 32, 1		; ユーザー設定（64px）
+	noteadd "icons/settings/design_64px.png", 33, 1		; デザイン設定（64px）
 	
 //System/Computer にディレクトリ移動
 	chdir "System/Computer/C@Drive/walls/img/"

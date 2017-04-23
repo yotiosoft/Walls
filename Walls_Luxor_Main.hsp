@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6008
+									　Version RM 6.0 / Build 6009
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -11,7 +11,6 @@
 		mode="window"								; 表示モード
 		language="jp"								; 表示言語
 		address="Computer:/"						; エクスプローラーの初期ディレクトリ（Computer:/はSystem/Computerに相当）
-		systemfont="Yu Gothic UI"					; フォント
 		now_sourcecode = "Walls Luxor Main.hsp"		; 現在読み込んでいるソースコード
 	
 		user_icon_num = 3							; ユーザーアイコンのバッファ番号
@@ -60,6 +59,9 @@
 		
 #uselib "HSPThread.dll"
 	#func HSPCreateThread "HSPCreateThread" int,str,int,int,int,int,int
+	
+#uselib "msvcrt"
+	#func rename "rename" str, str
 	
 *modules
 /*関数の登録↓*/
@@ -288,10 +290,38 @@
 	
 /*ハンドル値からwIDの取得（使用例：get_wID(アクティブなウィンドウのハンドル値) ）*/
 #defcfunc get_wID int hwnd_buf
-	repeat new_wID@ - first_wID@ - 1
+	
+	if new_wID@ = 1001 {
+		return 0
+	}
+	
+	wID_buf = 0
+	
+	repeat new_wID@ - first_wID@
 		i = cnt+first_wID@
 		
 		if phwnd@(i) = hwnd_buf {
+			wID_buf = i
+			break
+		}
+	loop
+	
+	return wID_buf
+	
+/*ハンドル値からwIDの取得（アクティブなウィンドウを関数内で取得 ）*/
+#defcfunc get_wID_with_Focus
+	Focus_hand = WindowFromPointA@( ginfo(0), ginfo(1) )
+	
+	if new_wID@ = 1001 {
+		return 0
+	}
+	
+	wID_buf = 0
+	
+	repeat new_wID@ - first_wID@
+		i = cnt+first_wID@
+		
+		if phwnd@(i) = Focus_hand {
 			wID_buf = i
 			break
 		}
@@ -345,6 +375,8 @@
 	/*画像ファイル読み込み*/
 		#include "buffer.hsp"
 	
+		now_sourcecode = "Walls Luxor Main.hsp"		; 現在読み込んでいるソースコード
+	
 *loading_registered_users
 	notesel registered_users
 	noteload "System/Computer/C@Drive/user/registered_users.wal"
@@ -358,7 +390,30 @@
 *boot_after_loading
 	/*ここまでファイル読み込み*/		
 		rad = double(0.00)
+	
+	/*変数の初期化*/
+		wID = 1000
+		new_wID = wID + 1
+		first_wID = new_wID
+		window_data = ""
 		
+		new_eID = -1
+		
+		directory = dirinfo(0)
+	
+		phwnd(1001) = 0
+	
+		type_of_wID = ""
+	
+		user_num = 0
+		
+		sdim filelist, 1024, 1000, 0
+		sdim filelist_with_path, 1024, 1000, 0
+		sdim filelist_category, 1024, 1000, 0
+		
+		sdim covered, 64, scx, scy
+	
+	/*背景色を青く*/
 		repeat
 			redraw 0
 		
@@ -381,7 +436,7 @@
 		
 			color 0, 100, 255 : boxf
 		
-			font ""+systemfont+"",36
+			font "",36
 			color double((255/155)*((cnt*5)*255/155)), 100+(cnt*5), 255 : cmes "Welcome!", 0, 240, 1024, 576
 		
 			redraw 1
@@ -395,7 +450,7 @@
 		
 			color 0, 100, 255 : boxf
 		
-			font ""+systemfont+"",36
+			font "",36
 			color double((255/155)/(255-(cnt*5)*255/155)), 255-(cnt*5), 255 : cmes "Welcome!", 0, 240, 1024, 576
 		
 			redraw 1
@@ -435,32 +490,13 @@
 		
 			color 0, 100, 255 : boxf 0, scy/2, scx, scy
 			
-			color cnt, 100+(0.6*(cnt*5)), 255 : font "Yu Gothic UI", 26
-			cmes registered_user(0), 0, scy/2 + 5, scx, scy/2 + 40
+			color cnt, 100+(0.6*(cnt*5)), 255 : font "", 26
+			cmes registered_user(user_num), 0, scy/2 + 5, scx, scy/2 + 40
 		
 			redraw 1
 		
 			await 1
 		loop
-	
-*variables
-	/*変数の初期化*/
-		wID = 1000
-		new_wID = wID + 1
-		first_wID = new_wID
-		window_data = ""
-		
-		new_eID = -1
-		
-		systemfont = "Meiryo"
-		
-		directory = dirinfo(0)
-		
-		sdim filelist, 1024, 1000, 0
-		sdim filelist_with_path, 1024, 1000, 0
-		sdim filelist_category, 1024, 1000, 0
-		
-		sdim covered, 64, scx, scy
 			
 	wait 200
 	
@@ -471,6 +507,7 @@
 	noteget user_Password, 1
 	noteget user_Icon_num, 3
 	noteget user_Wallpaper_num, 5
+	noteget systemfont, 7
 	
 	user_Icon_num = int(user_Icon_num)+2
 	user_Wallpaper_num = int(user_Wallpaper_num)+12
@@ -605,6 +642,8 @@
 		loop
 	
 *desktop_screen_2
+	gsel 0
+	
 	//onclick
 		onclick gosub *on_click
 	
@@ -806,7 +845,7 @@
 	wID = new_wID
 	
 	notesel type_of_wID
-	noteadd ""+now+"", wID, 1
+	noteadd now, (wID-first_wID), 1
 	
 	new_eID += 1
 	eID = new_eID
@@ -824,11 +863,11 @@
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-60, 0 : button gosub "", *window_minimization
+		pos WindowSize_X-60, 0 : button "", *window_minimization
 		
 	//閉じるボタン
 		objimage 26, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-30, 0 : button gosub "", *window_close
+		pos WindowSize_X-30, 0 : button "", *window_close
 		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
 	
 *File_Explorer__draw
@@ -984,7 +1023,7 @@
 		wID = new_wID
 	
 		notesel type_of_wID
-		noteadd ""+now+"", wID, 1
+		noteadd now, (wID-first_wID), 1
 	
 		WindowSize_X = about_ax__Size_X +2
 		WindowSize_Y = about_ax__Size_Y +32+1
@@ -998,15 +1037,17 @@
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-60, 0 : button gosub "", *window_minimization
+		pos WindowSize_X-60, 0 : button "", *window_minimization
 		
 	//閉じるボタン
 		objimage 26, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-30, 0 : button gosub "", *window_close
+		pos WindowSize_X-30, 0 : button "", *window_close
 		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
 	
 	//タイトルバー及び枠
 		color 0, 162, 232 : boxf
+	
+		font systemfont, 14
 	
 		color 255, 255, 255
 		cmes about_ax__Title, 0, 10, about_ax__Size_X+2, 32
@@ -1044,32 +1085,42 @@
 	now = "Settings"
 	
 	//ウィンドウ作成
-		wID = new_wID
+		if from_onclick = 0 {
+			wID = new_wID
+			
+			WindowSize_X = 800
+			WindowSize_Y = 500
+			
+			windowmake wID, WindowSize_X, WindowSize_Y, 1
+		
+			notesel window_data
+			noteadd "1", (wID-first_wID), 1
+			
+			onclick gosub *on_click
+		}
 	
 		notesel type_of_wID
-		noteadd ""+now+"", wID, 1
-	
-		WindowSize_X = 800
-		WindowSize_Y = 500
+		noteadd now, (wID-first_wID), 1
 		
-		windowmake wID, WindowSize_X, WindowSize_Y, 1
-	
-		notesel window_data
-		noteadd "1", (wID-first_wID), 1
+		gsel get_wID_with_Focus()
 		
+		clrobj
+	
 		onclick gosub *on_click
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-60, 0 : button gosub "", *window_minimization
+		pos WindowSize_X-60, 0 : button "", *window_minimization
 		
 	//閉じるボタン
 		objimage 26, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-30, 0 : button gosub "", *window_close
+		pos WindowSize_X-30, 0 : button "", *window_close
 		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
 	
 	//タイトルバー及び枠
 		color 0, 61, 51 : boxf
+	
+		font systemfont, 14
 	
 		color 255, 255, 255
 		cmes "設定", 0, 10, 800+2, 32
@@ -1077,19 +1128,24 @@
 	//設定のメインメニューを開く
 		color 239, 239, 239 : boxf 1, 40, WindowSize_X-2, WindowSize_Y-1
 	
-		rad = 1.00
+		if from_onclick = 0 {
+			rad = 1.00
+			
+			repeat
+				rad -= 0.05
+				color 0, 105, 92 : boxf 1, 40, cos(rad)*200, WindowSize_Y-1
 		
-		repeat
-			rad -= 0.05
-			color 0, 105, 92 : boxf 1, 40, cos(rad)*200, WindowSize_Y-1
+				if cos(rad)*200 >= 199 {
+					break
+				}
+				wait 1
+			loop
 	
-			if cos(rad)*200 >= 199 {
-				break
-			}
-			wait 1
-		loop
+		} else {
+			from_onclick = 0
+		}
 	
-		color 0, 105, 92 : boxf 1, 40, cos(rad)*200, WindowSize_Y-1
+		color 0, 105, 92 : boxf 1, 40, 200, WindowSize_Y-1
 	
 	//左側のメニューに項目を表示させる
 		font systemfont, 18
@@ -1104,13 +1160,260 @@
 		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
 		pos 45, 133 : mes "デザイン設定"
 	
+	//メインメニュー部分
+		color 128, 128, 128
+		
+		font systemfont, 22
+		pos 215, 50 : mes "Wallsの設定"
+		
+		font systemfont, 14
+	
+		color 239, 239, 239 : boxf 300-30, 100-20, 300+30+64, 100+64+10+20+20
+			
+		pos 300, 100 : gmode 2 : gcopy 32, 0, 0, 64, 64
+		color 128, 128, 128
+		cmes "ユーザー設定", 300-30, 100+64+10, 300+30+64, 100+64+10+20
+		
+		color 239, 239, 239 : boxf 450-30, 100-20, 450+30+64, 100+64+10+20+20
+		
+		pos 450, 100 : gmode 2 : gcopy 33, 0, 0, 64, 64
+		color 128, 128, 128
+		cmes "デザイン設定", 450-30, 100+64+10, 450+30+64, 100+64+10+20
+	
 	stop
 	
 *Settings__User
-	end
+	notesel type_of_wID
+	noteget type_of_wID__buf, (get_wID_with_Focus()-first_wID)
+	
+	if type_of_wID != "" and instr(type_of_wID, 0, "Settings") = -1 {
+		stop
+	}
+	
+	now = "Settings__User"
+	
+	notesel type_of_wID
+	noteadd now, (get_wID_with_Focus()-first_wID), 1
+	
+	gsel get_wID_with_Focus()
+	
+	clrobj
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+	//タイトルバー及び枠
+		color 0, 61, 51 : boxf
+	
+		font systemfont, 14
+	
+		color 255, 255, 255
+		cmes "設定 - ユーザー設定", 0, 10, 800+2, 32
+	
+	//設定のメインメニューを開く
+		color 239, 239, 239 : boxf 1, 40, 800-2, 500-1
+		color 0, 105, 92 : boxf 1, 40, 200, 500-1
+	
+	//左側のメニューに項目を表示させる
+		font systemfont, 18
+		color 255, 255, 255
+	
+		pos 10, 50 : gmode 2 : gcopy 29, 0, 0, 32, 32
+		pos 45, 53 : mes "メインメニュー"
+	
+		pos 10, 90 : gmode 2 : gcopy 30, 0, 0, 32, 32
+		pos 45, 93 : mes "ユーザー設定"
+	
+		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
+		pos 45, 133 : mes "デザイン設定"
+	
+	//設定部分
+		color 128, 128, 128
+		
+		font systemfont, 22
+		pos 215, 50 : mes "ユーザー設定"
+	
+		font systemfont, 14
+	
+		//ユーザー名
+			registered_user_buf = registered_user(user_num)
+			
+			pos 250, 90 : mes "ユーザー名"
+	
+			objsize 350, 20
+			pos 350, 90 : input registered_user(user_num)
+	
+		//パスワード
+			User_PassWord_buf = User_PassWord
+			
+			pos 250, 130 : mes "パスワード"
+	
+			objsize 300, 20
+			pos 400, 130 : input User_PassWord : sendmsg objinfo_hwnd(stat),204,'*'
+	
+			pos 250, 160 : mes "パスワード（確認）"
+	
+			User_PassWord_Reinput = ""
+	
+			objsize 300, 20
+			pos 400, 160 : input User_PassWord_Reinput : sendmsg objinfo_hwnd(stat),204,'*'
+	
+		//OKボタン
+			objimage -1 : objsize 100, 20
+			pos 600, 400 : button gosub "OK", *Settings__User__Save_Config
+	
+	stop
+	
+*Settings__User__Save_Config
+	if User_PassWord_buf != User_PassWord {
+		if User_PassWord_Reinput = "" {
+			dialog "パスワードをもう一度入力してください"
+			stop
+		}
+		if User_PassWord != User_PassWord_Reinput {
+			dialog "パスワードが一致していません"
+			stop
+		}
+	}
+	
+	//ユーザー名が変更されている場合はconfig.walがあるフォルダのフォルダ名とregistered_users.walを変更
+		if registered_user(user_num) != registered_user_buf {
+			rename "System/Computer/C@Drive/user/"+registered_user_buf+"/", "System/Computer/C@Drive/user/"+registered_user(user_num)+""
+	
+			if stat != 0 {
+				dialog "ユーザー名を変更できませんでした。\nその他の設定を保存します。", 1
+	
+				registered_user(user_num) = registered_user_buf
+				
+			} else {
+				notesel registered_users
+				noteadd registered_user(user_num), user_num, 1
+				notesave "System/Computer/C@Drive/user/registered_users.wal"
+			}
+		}
+		
+	notesel user_config
+	noteadd user_Password, 1, 1
+	
+	notesave "System/Computer/C@Drive/user/"+registered_user(user_num)+"/config.wal"
+	
+	return
 	
 *Settings__Design
-	end
+	notesel type_of_wID
+	noteget type_of_wID__buf, (get_wID_with_Focus()-first_wID)
+	
+	if type_of_wID != "" and instr(type_of_wID, 0, "Settings") = -1 {
+		stop
+	}
+	
+	now = "Settings__Design"
+	
+	notesel type_of_wID
+	noteadd now, (wID-first_wID), 1
+	
+	gsel get_wID_with_Focus()
+	
+	clrobj
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+	//タイトルバー及び枠
+		color 0, 61, 51 : boxf
+	
+		font systemfont, 14
+	
+		color 255, 255, 255
+		cmes "設定 - デザイン設定", 0, 10, 800+2, 32
+	
+	//設定のメインメニューを開く
+		color 239, 239, 239 : boxf 1, 40, 800-2, 500-1
+		color 0, 105, 92 : boxf 1, 40, 200, 500-1
+	
+	//左側のメニューに項目を表示させる
+		font systemfont, 18
+		color 255, 255, 255
+	
+		pos 10, 50 : gmode 2 : gcopy 29, 0, 0, 32, 32
+		pos 45, 53 : mes "メインメニュー"
+	
+		pos 10, 90 : gmode 2 : gcopy 30, 0, 0, 32, 32
+		pos 45, 93 : mes "ユーザー設定"
+	
+		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
+		pos 45, 133 : mes "デザイン設定"
+	
+	//設定部分
+		color 128, 128, 128
+		
+		font systemfont, 22
+		pos 215, 50 : mes "デザイン設定"
+	
+		font systemfont, 14
+	
+		//フォント
+			pos 250, 90 : mes "現在のフォント : "+systemfont+""
+	
+			objimage -1 : objsize 100, 20
+			pos 330, 110 : button gosub "フォントを選択する", *Settings__Design__choose_font
+	
+		//OKボタン
+			objimage -1 : objsize 100, 20
+			pos 600, 400 : button gosub "OK", *Settings__Design__Save_Config
+	
+	stop
+	
+*Settings__Design__choose_font
+	#uselib "comdlg32.dll"
+	#func ChooseFont "ChooseFontA" int
+	
+	mref bmscr, 67
+	dim chfont,16
+	dim logfont,16
+	sdim setting_SystemFont,32
+	
+	chfont.0 = 60 
+	chfont.1 = bmscr.13
+	chfont.3=varptr(logfont)
+	chfont.5 = 0x01000141
+	
+	pm=varptr(chfont)
+	ChooseFont pm
+	
+	if stat = 0 {
+		return
+	}
+	
+	style=0
+	if (chfont.12 & 0x0100):style=style+1
+	if (chfont.12 & 0x0200):style=style+2 
+	if (logfont.5 & 0x0000FF00):style=style+4 
+	if (logfont.5 & 0x00FF0000):style=style+8
+	size=chfont.4/10
+	memcpy systemfont,logfont,32,0,28
+	
+	return
+	
+*Settings__Design__Save_Config
+	notesel user_config
+	noteadd systemfont, 7, 1
+	
+	notesave "System/Computer/C@Drive/user/"+registered_user(0)+"/config.wal"
+	
+	return
 	
 /*-------------------------------------------------------ウィンドウ操作--------------------------------------------------------------*/
 	
@@ -1130,6 +1433,9 @@
 		;現存する（＝まだ消されていない）ウィンドウがいくつあるか調べる
 			notesel window_data
 			noteget window_data_buf, cnt
+	
+			notesel type_of_wID
+			noteadd "", (wID-first_wID), 1
 			
 			if window_data_buf = "1" {
 				extant_window ++
@@ -1139,23 +1445,31 @@
 			GetFocusA : Focus_hand = stat
 		
 			gsel 0
-			title "Focus_hand="+Focus_hand+" close_button_hwnd(cnt)="+close_button_hwnd(cnt)+""
 	
 			;ウィンドウを消すボタンと一致していればそのボタンが設置されているウィンドウを消す
 			if Focus_hand == close_button_hwnd(cnt) {
 				clear_wID = cnt+first_wID
+					
 				gsel clear_wID, -1
 			
 				notesel window_data
 				noteadd "0", (clear_wID-first_wID), 1
+	
+				wID = 0
 					
 				break
 			}
 	
 	loop
 	
-	gsel 0
-	return
+	gsel 0, 1
+	
+	sub = 1
+	gosub *desktop_screen_2
+	
+	onclick gosub *on_click
+	
+	stop
 	
 /*--------------------------------------------------クリックされたときの動作-------------------------------------------------*/
 
@@ -1167,6 +1481,8 @@
 	
 	//現在アクティブな子ウィンドウを検出（どのウィンドウを動かすか）
 		GetFocusA : Focus_hand = stat
+	
+		title"A "+Focus_hand+""
 		
 	//現在アクティブなウィンドウが親ウィンドウならreturn
 		if Focus_hand = parent_hwnd {
@@ -1177,7 +1493,7 @@
 		now = "on_click"
 		
 			gsel 0
-			title ""+parent_hwnd+" Focus_hand="+WindowFromPointA( ginfo(0), ginfo(1) )+""
+			;title ""+parent_hwnd+" Focus_hand="+WindowFromPointA( ginfo(0), ginfo(1) )+""
 		
 		;現在アクティブな子ウィンドウを検出
 			repeat new_wID - 1
@@ -1197,11 +1513,15 @@
 	/*子ウィンドウを動かす以外の目的でクリックされたときの動作*/
 	
 	//アクティブなウィンドウのハンドル値を取得
-		GetFocusA : Focus_hand = stat
+		Focus_hand = WindowFromPointA( ginfo(0), ginfo(1) )
 		
 	//現在アクティブなウィンドウが何のウィンドウかを取得
-		;notesel type_of_wID
-		;noteget type_of_wID__buf, get_wID(Focus_hand)
+		notesel type_of_wID
+		noteget type_of_wID__buf, (get_wID(Focus_hand)-first_wID)
+		
+		ic++
+		gsel 0 : title"B-"+ic+" "+type_of_wID__buf+" "+get_wID_with_Focus()+" "+Focus_hand+""
+		gsel get_wID_with_Focus()
 		
 	//親ウィンドウ上での動作
 		if Focus_hand = parent_hwnd {
@@ -1236,66 +1556,90 @@
 		}
 	
 	//エクスプローラー（*File_Explorer）
-		//エクスプローラーのウィンドウにフォーカスがあるか確認
-			GetFocusA : Focus_hand = stat
+		if type_of_wID__buf = "File_Explorer" {
+			gsel get_wID_with_Focus()
+			gosub *on_click__File_Explorer
+		}
+	
+	//設定（*settings or *settings_○○）
+		if type_of_wID__buf = "Settings" or type_of_wID__buf = "Settings__User" or type_of_wID__buf = "Settings__Design" {
+			gsel get_wID_with_Focus()
+			gosub *on_click__Settings
+		}
+	
+	return
+	
+*on_click__File_Explorer
+	//エクスプローラーのウィンドウにフォーカスがあるか確認
+		GetFocusA : Focus_hand = stat
 			
-			eID = -1
+		eID = -1
 			
-			repeat new_eID+1
-				if eID_hwnd(cnt) = Focus_hand {
-					eID = cnt
-					break
+		repeat new_eID+1
+			if eID_hwnd(cnt) = Focus_hand {
+				eID = cnt
+				break
+			}
+		loop
+			
+	if eID != -1 {
+		gsel eID_wID(eID)
+		
+		//フォルダ・ファイルを開く
+			if click_range(File_Explorer__border_Sidemenu_x, File_Explorer__border_2nd_menu_y, WindowSize_X, WindowSize_Y) = 1 {
+				clicked_file_number = ( ginfo_my-ginfo_wy1-(File_Explorer__border_2nd_menu_y+20) )/32
+
+				if clicked_file_number > get_files__total_files(eID)-1 {
+					return
 				}
-			loop
-			
-		if eID != -1 {
-			gsel eID_wID(eID)
-	
-			//フォルダ・ファイルを開く
-				if click_range(File_Explorer__border_Sidemenu_x, File_Explorer__border_2nd_menu_y, WindowSize_X, WindowSize_Y) = 1 {
-					clicked_file_number = ( ginfo_my-ginfo_wy1-(File_Explorer__border_2nd_menu_y+20) )/32
-	
-					if clicked_file_number > get_files__total_files(eID)-1 {
+
+				if filelist_category(eID,clicked_file_number) != "Directory" and filelist_category(eID,clicked_file_number) != "Drive" {
+					
+					if filelist_category(eID,clicked_file_number) = "File__ax" {
+						ax_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
+						goto *run_ax
+					} else : if filelist_category(eID,clicked_file_number) = "File__exe" {
+						exe_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
+						goto *run_exe
+					} else : if filelist_category(eID,clicked_file_number) = "File__text" {
+						text_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
+						goto *open_text
+					} else {
 						return
 					}
-	
-					if filelist_category(eID,clicked_file_number) != "Directory" and filelist_category(eID,clicked_file_number) != "Drive" {
-						
-						if filelist_category(eID,clicked_file_number) = "File__ax" {
-							ax_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
-							goto *run_ax
-						} else : if filelist_category(eID,clicked_file_number) = "File__exe" {
-							exe_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
-							goto *run_exe
-						} else : if filelist_category(eID,clicked_file_number) = "File__text" {
-							text_file = ""+File_Explorer__Dir+"\\"+filelist(eID,clicked_file_number)+""
-							goto *open_text
-						} else {
-							return
-						}
-						
-					}
 					
-					notesel File_Explorer__Dir_buf
-					noteadd ""+filelist_with_path(eID, clicked_file_number)+"\\", eID, 1
-					
-					goto *File_Explorer__draw
 				}
-		
-		}
+				
+				notesel File_Explorer__Dir_buf
+				noteadd ""+filelist_with_path(eID, clicked_file_number)+"\\", eID, 1
+					
+				goto *File_Explorer__draw
+			}
+			
+	}
 	
-	//設定（*settings）
-		if now = "Settings" {
-			if click_range(10, 50, 100, 90) = 1 {
-				gosub *Settings
-			}
-			if click_range(10, 90, 100, 130) = 1 {
-				gosub *Settings__User
-			}
-			if click_range(10, 130, 100, 170) = 1 {
-				gosub *Settings__Design
-			}
+	return
+	
+*on_click__Settings
+	if click_range(10, 50, 200, 90) = 1 {
+		from_onclick = 1
+		goto *Settings
+	}
+	if click_range(10, 90, 200, 130) = 1 {
+		goto *Settings__User
+	}
+	if click_range(10, 130, 200, 170) = 1 {
+		goto *Settings__Design
+	}
+	
+	if type_of_wID__buf = "Settings" {
+		if click_range(300-30, 100, 300+30+64, 100+64+10+20) = 1 {
+			goto *Settings__User
 		}
+		if click_range(450-30, 100, 450+30+64, 100+64+10+20) = 1 {
+			goto *Settings__Design
+		}
+	}
 	
 	return
 	
