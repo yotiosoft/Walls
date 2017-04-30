@@ -1,0 +1,459 @@
+日本 {
+北海道, Hokkaido;
+青森県, Aomori;
+岩手県, Iwate;
+宮城県, Miyagi;
+秋田県, Akita;
+山形県, Yamagata;
+福島県, Fukushima;
+茨城県, Ibaraki;
+栃木県, Tochigi;
+群馬県, Gunma;
+埼玉県, Saitama;
+千葉県, Chiba;
+東京都, Tokyo;
+神奈川県, Kanagawa;
+新潟県, Niigata;
+長野県, Nagano;
+山梨県, Yamanashi;
+静岡県, Shizuoka;
+富山県, Toyama;
+石川県, Ishikawa;
+福井県, Fukui;
+岐阜県, Gifu;
+愛知県, Aichi;
+滋賀県, Shiga;
+三重県, Mie;
+和歌山県, Wakayama;
+奈良県, Nara;
+京都府, Kyoto;
+大阪府, Osaka;
+兵庫県, Hyogo;
+岡山県, Okayama;
+広島県, Hiroshima;
+山口県, Yamaguchi;
+鳥取県, Tottori;
+島根県, Shimane;
+香川県, Kagawa;
+徳島県, Tokushima;
+高知県, Kochi;
+愛媛県, Ehime;
+福岡県, Fukuoka;
+佐賀県, Saga;
+長崎県, Nagasaki;
+大分県, Oita;
+熊本県, Kumamoto;
+宮崎県, Miyazaki;
+鹿児島県, Kagoshima;
+沖縄県, Okinawa;
+}
+
+アイスランド {
+レイキャビク, Reykjavik;
+ビーク, vik;
+スティッキスホールムル, Stykkisholmur;
+ネースコイプスターズル, Neskaupstadur;
+ヘブン, Hofn;
+}
+
+アイルランド {
+ダブリン, Dublin;
+アークロー, Arklow;
+ウォーターフォード, Waterford;
+コーク, Cork;
+トラリー, Tralee;
+リムリック, Limerick;
+ゴールウェー, Galway;
+スライゴ, Sligo;
+ダンドーク, Dundalk;
+アスローン, Athlone;
+マリンガー, Mallingar;
+}
+
+アメリカ合衆国 {
+ワシントンD.C., Washington D.C.;
+アラバマ州, Alabama;
+アラスカ州, Alaska;
+アリゾナ州, Arizona;
+アーカンソー州, Arkansas;
+カリフォルニア州, California;
+コロラド州, Colorado;
+コネチカット州, Connecticut;
+デラウェア州, Delaware;
+フロリダ州, Florida;
+ジョージア州, Georgia;
+ハワイ州, Hawaii;
+アイダホ州, Idaho;
+イリノイ州, Illinois;
+インディアナ州, Indiana;
+アイオワ州, Iowa;
+カンザス州, Kansas;
+ケンタッキー州, Kentucky;
+ルイジアナ州, Louisiana;
+メイン州, Maine;
+メリーランド州, Maryland;
+マサチューセッツ州, Massachusetts;
+ミシガン州, Michigan;
+ミネソタ州, Minnesota;
+ミシシッピ州, Mississippi;
+ミズーリ州, Missouri;
+モンタナ州, Montana;
+ネブラスカ州, Nebraska;
+ネバダ州, Nevada;
+ニューハンプシャー州, New Hampshire;
+ニュージャージー州, New Jersey;
+ニューメキシコ州, New Mexico;
+ニューヨーク州, New York;
+ノースカロライナ州, North Carolina;
+ノースダコタ州, North Dakota;
+オハイオ州, Ohio;
+オクラホマ州, Oklahoma;
+オレゴン州, Oregon;
+ペンシルベニア, Pennsylvania;
+ロードアイランド州, Rhode Island;
+サウスカロライナ州, South Carolina;
+サウスダコタ州, South Dakota;
+テネシー州, Tennerssee;
+テキサス州, Texas;
+ユタ州, Utah;
+バーモント州, Vermont;
+バージニア州, Virginia;
+ワシントン州, Washington;
+ウェストバージニア州, West Virginia;
+ウィスコンシン州, Wisconsin;
+ワイオミング州, Wyoming;
+グアム, Guam;
+北マリアナ諸島, Northern Mariana Islands
+プエルトリコ, Puerto Rico;
+アメリカ領サモア, American Samoa;
+}
+
+アラブ首長国連邦 {
+アブダビ, Abu Dhabi;
+ルーウェ, Ar Ruways;
+ドバイ, Dubai;
+アル・アイン, Ar Ayn;
+シャールジャ, Sharjah;
+ラアス・アル=ハイマ, Ras al Khaymah;
+フジャイラ, Al Fujayrah;
+}
+
+アルゼンチン {
+ブエノスアイレス, Buenos Aires;
+ロサリオ, Rosario;
+サンタフェ, Santa Fe de la Vera Cruz;
+コルドバ, Cordoba;
+サンルイス, San Luis;
+メンドーサ, Mendoza;
+マル・デル・プラタ, Mar del Plata;
+バイアブランカ, Bahia Blanca;
+コモドーロリバダビア, Comodoro Rivadavia;
+エル・カラファテ, El Calafate;
+ウシュアイア, Ushuaia;
+}
+
+イギリス {
+イングランド, England;
+スコットランド, Scotland;
+ウェールズ, Wales;
+北アイルランド, Northern Ireland;
+}
+
+イスラエル {
+エルサレム, Jerusalem;
+テルアビブ, Tel Aviv;
+ハイファ, Haifa;
+ガザ, Gaza;
+ナザレ, Nazareth;
+エイラト, Eilat;
+}
+
+イタリア {
+ローマ, Rome;
+ナポリ, Napoli;
+バーリ, Bari;
+カターニア, Catania;
+パレルモ, Palermo;
+アジャクシオ, Ajaccio;
+ピサ, Pisa;
+フィレンツェ, Firenze;
+ボローニャ, Bologna;
+ジェノバ, Genova;
+トリノ, Torino;
+ミラノ, Milano;
+ベネチア, Venezia;
+トリエステ, Trieste;
+}
+
+イラク {
+バグダッド, Baghdad;
+ラマーディー, Ar Ramadi;
+ナジャフ, An Najaf al Ashraf;
+バスラ, Al Basrah;
+キルクーク, Kirkuk;
+アルビール, Erbil;
+モースル, Al Mawsil al Jadidah;
+}
+
+イラン {
+テヘラン, Tehran;
+アーモル, Amol;
+ラシュト, Rasht;
+アルダビール, Ardabil;
+ダブリーズ, Tabriz;
+ザンジャーン, Zanjan;
+ハマダーン, Hamadan;
+イスファハーン, Esfahan;
+シーラーズ, Shiraz;
+バンダレ・アッバース, Bandar Abbas;
+マシュハド, Mashhad;
+}
+
+インド {
+デリー, Delhi;
+グルガーオン, Gurgaon;
+ジャイプル, Jaipur;
+アーグラ, Agra;
+カーンプル, Kanpur;
+ラクナウ, Lucknow;
+パトナー, Patna;
+コルカタ, Kolkata;
+ナーグプル, Nagpur;
+インドール, Indore;
+ラージコット, Rajkot;
+ムンバイ, Mumbai;
+プネー, Pune;
+ビシャーカパトナム, Visakhapatnam;
+フブリ, Hubballi;
+バンガロール, Bengaluru;
+マドゥライ, Madurai;
+}
+
+インドネシア {
+ジャカルタ, Jakarta;
+バンドン, Bandung;
+スラバヤ, Surabaya;
+メダン, Medan;
+ペカンバル, Pekanbaru;
+パダン, Padang;
+パレンバン, Palembang;
+ポンティアナ, Pontianak;
+バンジェルマシン, Banjarmasin;
+バリクパパン, City of Balikpapan;
+マカッサル, Makassar;
+アンボン, Anbon;
+ソロン, Sorong;
+メラウケ, Merauke;
+クパン, Kupang;
+デンパサル, Denpasar;
+ビマ, Bima;
+}
+
+ウクライナ {
+キエフ, Kiev;
+ハリコフ, Kharkiv;
+ドネツク, Donetsk;
+ドニエプロペトロフスク, Dnipropetrovsk;
+オデッサ, Odessa;
+リヴィウ, Lviv;
+}
+
+エジプト {
+カイロ, Cairo;
+タンタ, Tanda;
+アレクサンドリア, Alexandria;
+ポートサイド, Port Said;
+メルサマトルー, Marsa Matruh;
+アシュート, Asyut;
+ソハグ, Suhaj;
+キナ, Qina;
+ルクソール, Luxor;
+エドフ, Idfu;
+アスワン, Aswan;
+クセイル, Al Qusayr;
+}
+
+エストニア {
+タリン, Tallinn;
+ケイラ, Keila;
+パルティスキ, Paldiski;
+タパ, Tapa;
+ハープサル, Haapsalu;
+パルヌ, Parnu;
+ビリヤンティ, Viljandi;
+タルトゥ, Tartu;
+ウォル, Voru;
+}
+
+エチオピア {
+アディスアベバ, Addis Abeba;
+アワッサ, Hawassa;
+ガンベラ, Gambela;
+デセ, Dese;
+ゴンダル, Gonder;
+メックエル, Mekele;
+ディレダワ, Dire Dawa;
+}
+
+オーストラリア {
+キャンベラ, Canberra;
+シドニー, Sydney;
+ニューカッスル, Newcastle;
+アルベリー, Albury;
+ベンディゴ, Bendigo;
+メルボルン, Melbourne;
+ジーロング, Geelong;
+マウントガンビア, Mount Gambier;
+アデレード, Adelaide;
+ビクターハーバー, Victor Harbor;
+ポートオーガスタ, Port Augusta;
+ポートリンカーン, Port Lincoln;
+エスペランス, Esperance;
+オールバニー, Albany;
+パース, Perth;
+ジェラルトン, Geraldton;
+オンズロー, Onslow;
+ポートヘッドランド, Port Hedland;
+ダーウィン, Darwin;
+ユーラーラ, Yulara;
+アリススプリングス, Alice Springs;
+ケアンズ, Caims;
+タウンズビル, Townsville;
+ロックハンプトン, Rockhampton;
+ブリスベン, Brisbane;
+}
+
+オーストリア {
+ウィーン, Vienna;
+リンツ, Leonding;
+ザンクトペルテン, Sankt Polten;
+アムシュテッテン, Amstetten;
+シュタイア, Steyr;
+ヴェルス, Wels;
+ウィーナー・ノイシュタット, Wiener Neustadt;
+ザルツブルク, Salzburg;
+グラーツ, Graz;
+クラーゲンフルト, Klagenfurt am Woerthersee;
+フィラハ, Villach;
+インスブルック, Innsbruck;
+}
+
+オランダ {
+アムステルダム, Amsterdam;
+フローニンゲン, Groningen;
+ドックム, Dokkum;
+レーワルデン, Leeuwardern;
+ハルリンゲン, Harlingen;
+ドラハテン, Drachten;
+スネーク, Sneek;
+デン・ヘルダー, Den Helder;
+アルクマール, Alkmaar;
+ホールン, Hoorn;
+エメン, Emmen;
+メッペル, Meppel;
+ズウォレ, Zwolle;
+アルメロー, Almelo;
+ヘンゲロー, Hengelo;
+エンスヘデー, Enschede;
+アルメール, Almere Stad;
+ユトレヒト, Utrecht;
+アルンヘム, Arnhem;
+ネイメーヘン, Nijmegen;
+ハーグ, Den Haag;
+ロッテルダム, Rotterdam;
+ドルトレヒト, Dordrecht;
+ブレダー, Breda;
+エイントホーフェン, Eindhoven;
+フェンロー, Venlo;
+}
+
+カザフスタン {
+アスタナ, Astana;
+クスタナイ, Qostanay;
+パブロダル, Pavlodar;
+カラガンダ, Aqtas;
+セメイ, Semey;
+ウスチ＝カメノグルスク, Ust-Kamenogorsk;
+バルハシ, Balqash;
+アクトベ, Aqtobe;
+アティラウ, Atyrau;
+マカト, Maqat;
+クリサリ, Qulsary;
+キジルオルダ, Qyzylorda;
+アルマトイ, Almaty;
+シムケント, Shymkent;
+アクタウ, Aktau;
+}
+
+カナダ {
+オンタリオ州, Ontario;
+ケベック州, Quebec;
+ノバスコシア州, Nova Scotia;
+ニューブラウンズウィック州, New Brunswick;
+マニトバ州, Manitoba;
+ブリティッシュコロンビア州, British Columbia;
+プリンスエドワード島州, Prince Edward Island;
+サスカチュワン州, Saskatchewan;
+アルバータ州, Alberta;
+ニューファンドランド・ラブラドール州, Newfoundland and Labrador;
+北西準州, Northwest Territories;
+ユーコン準州, Yukon;
+ヌナブト準州, Nunavut;
+}
+
+キューバ {
+ハバナ, Havana;
+ピナルデル・リオ, Pinar del Rio;
+ヌエバ・ヘロナ, Nueva Gerona;
+シエンフエゴス, Cienfuegos;
+サンタクララ, Santa Clara;
+カマグエイ, Camaguey;
+オルギン, Holguin;
+マンサニヨ, Manzanillo;
+モア, Moa;
+バラコア, Baracoa;
+バヤモ, Bayamo;
+サンチアゴ・デ・キューバ, Santiago de Cuba;
+}
+
+ギリシャ {
+アテネ, Athens;
+アレクサンドルポリス, Alexandroupoli;
+カバラ, Kavala;
+セレ, Serres;
+テッサロニキ, Thessaloniki;
+プトレマイス, Ptolemada;
+ラリサ, Larisa;
+キミ, Kymi;
+アルタ, Arta;
+アグリニオン, Agrinio;
+ラミア, Lamia;
+テーベ, Thivai;
+コリントス, Korinthos;
+パトラ, Patra;
+アルゴス, Argos;
+アマリアス, Amaliada;
+ピルゴス, Pyrgos;
+トリポリス, Tripoli;
+フィリアトラ, Filiatra;
+ピュロス, Pylos;
+カラマタ, Kalamata;
+スパルティ, Sparti;
+イラクリオン, Irakleion;
+ハニア, Chania;
+シティア, Siteia;
+}
+
+クロアチア {
+ザグレブ, Zagreb - Centar;
+ヴァラズディン, Varazdin;
+コプリブニツァ, Koprivnica;
+リエカ, Rijeka;
+ロビニ, Rovinj;
+プーラ, Pula;
+クルク, Krk;
+ノビグラード, Pridraga;
+ベンコヴァツ, Benkovac;
+ビオグラードナ・モル, Biograd na Moru;
+}
+

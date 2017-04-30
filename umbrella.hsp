@@ -1,0 +1,258 @@
+*loading_umbrella_config
+	notesel umbrella_config
+	noteload ""+Computer_Pass+"/C@Drive/user/"+registered_user(user_num)+"/umbrella_config.wal"
+	
+	default_city = get_chapter(umbrella_config, "default", " = \"", "\";")
+	
+	if default_city = "" {
+		goto *Set_City
+	} else {
+		goto *Umbrella_Home
+	}
+	
+	stop
+	
+*Umbrella_Home
+	gosub *Draw_Umbrella_Background
+	
+	stop
+	
+*Set_City
+	gosub *Draw_Umbrella_Background
+	
+	color 255, 255, 255
+	pos 222, 50 : gmode 4,,,256 : gcopy 34, 0, 0, 579, 167
+	
+	color 128, 128, 128
+	
+	font systemfont, 36
+	cmes "Umbrellaへようこそ", 200, 240, 800, 280
+	
+	font systemfont, 16
+	cmes "地域設定を開始します。", 200, 300, 800, 320
+	
+	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
+	pos 450, 400 : button "次へ", *Set_City_2
+	
+	stop
+	
+*Set_City_2
+	clrobj
+	
+	gosub *Draw_Umbrella_Background
+	
+	color 128, 128, 128
+	
+	pos 250, 80 : mes "お住いの国を選択してください。"
+	
+	notesel countries
+	noteadd "日本", 0, 1
+	noteadd "アイスランド", 1, 1
+	noteadd "アイルランド", 2, 1
+	noteadd "アメリカ合衆国", 3, 1
+	noteadd "アラブ首長国連邦", 4, 1
+	noteadd "アルゼンチン", 5, 1
+	noteadd "イギリス", 6, 1
+	noteadd "イスラエル", 7, 1
+	noteadd "イタリア", 8, 1
+	noteadd "イラク", 9, 1
+	noteadd "イラン", 10, 1
+	noteadd "インド", 11, 1
+	noteadd "インドネシア", 12, 1
+	noteadd "ウクライナ", 13, 1
+	noteadd "エジプト", 14, 1
+	noteadd "エストニア", 15, 1
+	noteadd "エチオピア", 16, 1
+	noteadd "オーストラリア", 17, 1
+	noteadd "オーストリア", 18, 1
+	noteadd "オランダ", 19, 1
+	noteadd "カザフスタン", 20, 1
+	noteadd "カナダ", 21, 1
+	noteadd "キューバ", 22, 1
+	noteadd "ギリシャ", 23, 1
+	noteadd "クロアチア", 24, 1
+	noteadd "コンゴ民主共和国", 25, 1
+	noteadd "サウジアラビア", 26, 1
+	noteadd "ジャマイカ", 27, 1
+	noteadd "ジョージア", 28, 1
+	noteadd "シリア", 29, 1
+	noteadd "シンガポール", 30, 1
+	noteadd "ジンバブエ", 31, 1
+	noteadd "スイス", 32, 1
+	noteadd "スペイン", 33, 1
+	noteadd "スリランカ", 34, 1
+	noteadd "タイ", 35, 1
+	noteadd "大韓民国", 36, 1
+	noteadd "タンザニア", 37, 1
+	noteadd "中華人民共和国", 38, 1
+	noteadd "朝鮮民主主義人民共和国", 39, 1
+	noteadd "チリ", 40, 1
+	noteadd "デンマーク", 41, 1
+	noteadd "ドイツ", 42, 1
+	noteadd "トルコ", 43, 1
+	noteadd "ナイジェリア", 44, 1
+	noteadd "ニュージーランド", 45, 1
+	noteadd "ネパール", 46, 1
+	noteadd "ノルウェー", 47, 1
+	noteadd "パキスタン", 48, 1
+	noteadd "ハンガリー", 49, 1
+	noteadd "バングラデシュ", 50, 1
+	noteadd "フィリピン", 51, 1
+	noteadd "フィンランド", 52, 1
+	noteadd "ブラジル", 53, 1
+	noteadd "フランス", 54, 1
+	noteadd "ブルガリア", 55, 1
+	noteadd "ベトナム", 56, 1
+	noteadd "ベラルーシ", 57, 1
+	noteadd "ペルー", 58, 1
+	noteadd "ベルギー", 59, 1
+	noteadd "ポーランド", 60, 1
+	noteadd "ボスニア・ヘルツェゴビナ", 61, 1
+	noteadd "ポルトガル", 62, 1
+	noteadd "マダガスカル", 63, 1
+	noteadd "マリ", 64, 1
+	noteadd "マルタ", 65, 1
+	noteadd "マレーシア", 66, 1
+	noteadd "南アフリカ共和国", 67, 1
+	noteadd "ミャンマー", 68, 1
+	noteadd "メキシコ", 69, 1
+	noteadd "モルドバ", 70, 1
+	noteadd "モロッコ", 71, 1
+	noteadd "モンゴル", 72, 1
+	noteadd "ヨルダン", 73, 1
+	noteadd "ラオス", 74, 1
+	noteadd "リトアニア", 75, 1
+	noteadd "リビア", 76, 1
+	noteadd "ルーマニア", 77, 1
+	noteadd "ロシア", 78, 1
+	
+	objsize 200, 20
+	pos 400, 150 : combox country_num, 0, countries
+	
+	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
+	pos 450, 400 : button "次へ", *Set_City_3
+	
+	stop
+	
+*Set_City_3
+	clrobj
+	
+	gosub *Draw_Umbrella_Background
+	
+	color 128, 128, 128
+	
+	notesel countries
+	noteget Selected_Country, country_num
+	
+	notesel cities_data
+	noteload ""+Computer_Pass+"/C@Drive/walls/umbrella/cities.wal"
+	
+	cities_in_the_country_tmp = get_chapter(cities_data, ""+Selected_Country+"", " {", "}")
+	notemax_tmp = notemax
+	
+	cities_in_the_country = ""
+	En_cities_in_the_country = ""
+	i = -1
+	
+	repeat notemax_tmp
+		notesel cities_in_the_country_tmp
+		noteget cities_in_the_country_tmp_tmp, cnt
+	
+		if cities_in_the_country_tmp_tmp != "" {
+			i++
+			getstr new_cities_in_the_country_tmp, cities_in_the_country_tmp_tmp, 0, ','
+			getstr En_cities_in_the_country_tmp, cities_in_the_country_tmp_tmp, instr(cities_in_the_country_tmp_tmp, 0, ", ")+2, ';'
+			
+			notesel En_cities_in_the_country
+			noteadd En_cities_in_the_country_tmp, i, 1
+	
+			cities_in_the_country += ""+new_cities_in_the_country_tmp+"\n"
+		}
+	loop
+	
+	pos 250, 80 : mes "お住いの地域を選択してください。"
+	
+	objsize 200, 20
+	pos 400, 150 : combox city_num, 0, cities_in_the_country
+	
+	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
+	pos 450, 400 : button "次へ", *Set_City_3_Save
+	
+	stop
+	
+*Set_City_3_Save
+	if Selected_Country = "日本" or Selected_Country = "アメリカ合衆国" or Selected_Country = "イギリス" or Selected_Country = "カナダ" {
+		goto *Set_City_3_2
+	
+	} else {
+		notesel En_cities_in_the_country
+		noteget selected_En_cities_in_the_country, city_num
+		
+		notesel umbrella_config
+		noteadd "default = \""+selected_En_cities_in_the_country+"\";", 0, 1
+		
+		notesave ""+Computer_Pass+"/C@Drive/user/"+registered_user(user_num)+"/umbrella_config.wal"
+	
+		goto *Set_City_4
+	}
+	
+*Set_City_3_2
+	clrobj
+	
+	gosub *Draw_Umbrella_Background
+	
+	notesel En_cities_in_the_country
+	noteget selected_En_cities_in_the_country, city_num
+	
+	notesel cities_data_2
+	noteload ""+Computer_Pass+"/C@Drive/walls/umbrella/cities_"+Selected_Country+".wal"
+	
+	cities_in_the_country_2_tmp = get_chapter(cities_data_2, ""+selected_En_cities_in_the_country+"", " {", "}")
+	notemax_tmp = notemax
+	
+	cities_in_the_country_2 = ""
+	En_cities_in_the_country_2 = ""
+	i = -1
+	
+	repeat notemax_tmp
+		notesel cities_in_the_country_2_tmp
+		noteget cities_in_the_country_2_tmp_tmp, cnt
+	
+		if cities_in_the_country_2_tmp_tmp != "" {
+			i++
+			getstr new_cities_in_the_country_2_tmp, cities_in_the_country_2_tmp_tmp, 0, ','
+			getstr En_cities_in_the_country_2_tmp, cities_in_the_country_2_tmp_tmp, instr(cities_in_the_country_2_tmp_tmp, 0, ", ")+2, ';'
+			
+			notesel En_cities_in_the_country_2
+			noteadd En_cities_in_the_country_2_tmp, i, 1
+	
+			cities_in_the_country_2 += ""+new_cities_in_the_country_2_tmp+"\n"
+		}
+	loop
+	
+	color 128, 128, 128
+	
+	pos 250, 80 : mes "お住いの地域を選択してください。"
+	
+	city_num_2 = 0
+	
+	objsize 200, 20
+	pos 400, 150 : combox city_num_2, 0, cities_in_the_country_2
+	
+	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
+	pos 450, 400 : button "次へ", *Set_City_3_2_Save
+	
+	stop
+	
+*Set_City_3_2_Save
+	notesel En_cities_in_the_country_2
+	noteget selected_En_cities_in_the_country_2, city_num_2
+	
+	notesel umbrella_config
+	noteadd "default = \""+selected_En_cities_in_the_country_2+"\";", 0, 1
+	
+	notesave ""+Computer_Pass+"/C@Drive/user/"+registered_user(user_num)+"/umbrella_config.wal"
+	
+	goto *Set_City_4
+	
+*Set_City_4

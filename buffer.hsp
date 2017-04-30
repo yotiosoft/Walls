@@ -1,14 +1,19 @@
 ; Walls Luxor Buffer.hsp
-	buffer_things = ""
+	total_buffer_things = 40
 	
 	now_sourcecode = "buffer.hsp"		; 現在読み込んでいるソースコード
 	
 //読み込むファイルをbuffer_thingsに書き込む
 	notesel buffer_things
-	noteadd "", 0, 1
 	
-//Walls ロゴ
+	repeat total_buffer_things + 1
+		notesel buffer_things
+		noteadd "none", cnt, 1
+	loop
+	
+//Walls ロゴ + タイトル（黒字）
 	noteadd "icons/logo.png", 1, 1
+	noteadd "icons/title_black.png", 40, 1
 	
 //スタートボタン
 	noteadd "buttons/startmenu/startmenu.png", 2, 1
@@ -50,34 +55,43 @@
 //デスクトップ画面に表示するアイコン
 	noteadd "icons/desktop_screen/pc.png", 27, 1		; マイコンピュータ
 	noteadd "icons/desktop_screen/setting.png", 28, 1	; 設定
+	noteadd "icons/desktop_screen/umbrella.png", 37, 1	; Umbrella
 	
 //設定で使うアイコン
 	noteadd "icons/settings/main.png", 29, 1			; メインメニュー
 	noteadd "icons/settings/user.png", 30, 1			; ユーザー設定
 	noteadd "icons/settings/design.png", 31, 1			; デザイン設定
+	noteadd "icons/settings/information.png", 38, 1		; About
 	
-	noteadd "icons/settings/user_64px.png", 32, 1		; ユーザー設定（64px）
-	noteadd "icons/settings/design_64px.png", 33, 1		; デザイン設定（64px）
+	noteadd "icons/settings/user_64px.png", 32, 1			; ユーザー設定（64px）
+	noteadd "icons/settings/design_64px.png", 33, 1			; デザイン設定（64px）
+	noteadd "icons/settings/information_64px.png", 39, 1	; About
+	
+//Umbrellaで使うアイコン
+	noteadd "umbrella/umbrella_logo.png", 34, 1			; Umbrella ロゴ
+	noteadd "umbrella/umbrella_logo_2.png", 35, 1		; Umbrella ロゴ（小）
+	
+//ボタン
+	noteadd "buttons/button_gray_and_blue.png", 36, 1	; ボタン（常時グレー/マウスオーバー時青）
 	
 //System/Computer にディレクトリ移動
 	chdir "System/Computer/C@Drive/walls/img/"
 	
 //読み込み開始
 	notesel buffer_things
-	notemax_buf = notemax
 	
-	repeat notemax_buf
+	repeat total_buffer_things + 1
 		notesel buffer_things
 		noteget buffer_thing, cnt
 	
-		if cnt != 0 and buffer_thing != "" {
+		if cnt != 0 and buffer_thing != "none" {
 			celload buffer_thing, cnt
 		}
 	
 		gsel 0
 	
 		gmode 2
-		pos (scx/2)-100, (scy/2)+50 : gcopy 10002, 0, 0, double(cnt)/(notemax_buf-1)*200, 5
+		pos (scx/2)-100, (scy/2)+50 : gcopy 10002, 0, 0, double(cnt)/(total_buffer_things-1)*200, 5
 		
 		wait 1
 	loop

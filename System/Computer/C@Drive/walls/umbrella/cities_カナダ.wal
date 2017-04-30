@@ -1,0 +1,130 @@
+Ontario {
+オタワ, Ottawa;
+キングストン, Kingston;
+トロント, Toronto;
+ミシサガ, Mississauga;
+ナイアガラフォールズ, Niagara Falls;
+ハミルトン, Hamilton;
+キッチナー, Kitchener;
+オリリア, Orillia;
+}
+
+Quebec {
+ガスペ, Gaspe;
+サグネ, Saguenay;
+ケベックシティ, Quebec City;
+モントリオール, Montreal;
+シャーブルック, Sherbrooke;
+シブーガモー, Chibougamau;
+イブジビク, Ivujivik;
+サルイト, Salluit;
+クジュジュアラビック, Kuujjuarapik;
+}
+
+Nova Scotia {
+ハリファックス, Halifax;
+ニューグラスゴー, New Glasgow;
+ヤーマス, Yarmouth;
+}
+
+New Brunswick {
+モンクトン, Moncton;
+フレデリンクトン, Frederincton;
+セントジョン, Saint John;
+}
+
+Manitoba {
+ウィニペグ, Winnipeg;
+チャーチル, Churchill;
+ラックブロッケット, Brochet;
+リン・レイク, Lynn Lake;
+ギラム, Gillam;
+トンプソン, Tompson;
+スワンリバー, Swan River
+ポーティジ・ラブレーリー
+}
+
+British Columbia {
+ビクトリア, Victoria;
+バンクーバー, Vancouver;
+ナナイモ, Nanaimo;
+カムループス, Kamloops;
+ケロウナ, Kelowna;
+プリンス・ジョージ, Prince George;
+プリンス・ルパート, Prince Rupert
+ディーズレーク, Dease Lake;
+フォートネルソン Fort Nelson;
+}
+
+Prince Edward Island {
+シャーロットタウン, Charlottetown;
+ソーリス, Souris;
+サマーサイド, Summerside;
+アルバートン, Alberton;
+}
+
+Saskatchewan {
+レジャイナ, Regina;
+サスカトゥーン, Saskatoon;
+ヨークトン, Yorkton;
+スウィフトカレント, Swift Current;
+ノース・バトルフォード, North Battleford;
+ラ・ロンジュ, La Ronge;
+フォン＝デゥ＝ラク, Fond-du-Lac;
+}
+
+Alberta {
+エドモントン, Edmonton;
+カルガリー, Calgary;
+メディシンハット, Medicine Hat;
+レスブリッジ, Lethbridge;
+レッド・ディア, Red Deer;
+フォート・マクマレー, Fort McMurray;
+ピースリバー, Peace River;
+}
+
+Newfoundland and Labrador {
+セントジョンズ, St. Johns;
+コーナーブルック, Corner Brook;
+カートライト, Cartright;
+ラブラドルシティ, Labeador City;
+ホープデール, Hopedale;
+}
+
+Northwest Territories {
+イエローナイフ, Yellowknife;
+トゥクトヤクトゥク, Tuktoyaktuk;
+イヌビク, Inuvik;
+アクラービク, Aklavik;
+フォートマクファーソン, Fort MaxPherson;
+パウラトゥク, Paulatuk;
+コルビルレイク, Colville Lake;
+ワティ, Wha Ti;
+レイ＝エゾ, Rae-Edzo;
+フォートスミス, Fort Smith;
+フォートリアード, Fort Liard;
+}
+
+Yukon {
+ホワイトホース, Whitehorse;
+ワトソンレイク, Watson Lake;
+ファロ, Faro;
+オールドクロウ, Old Crow;
+}
+
+Nunavut {
+イカルイト, Iqaluit;
+キミルト, Kimmirut;
+パングナータング, Pangnirtung;
+キキクタルジュアク, Qikiqtarjuaq;
+クライドリバー, Clyde River;
+アークティック・ベイ, Arctic Bay;
+イグルーリク, Igloolik;
+リパルス・ベイ, Repulse Bay;
+ランキンインレット, Rankin Inlet;
+ベーカーレイク, Baker Lake;
+クガールク, Kugaaruk;
+グジョーアヘブン, Gjoa Haven;
+ケンブリッジベイ, Cambridge Bay;
+クグルクトゥク, Kugluktuk;
+}

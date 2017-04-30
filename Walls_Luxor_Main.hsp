@@ -2,7 +2,7 @@
 
 										Walls Luxor Main Source
 	
-									　Version RM 6.0 / Build 6009
+									　Version RM 6.0 / Build 6010
 
 --------------------------------------------------------------------------------------------------*/
 
@@ -17,12 +17,14 @@
 		wallpaper_sizeX = 1024
 		wallpaper_sizeY = 576
 	
+		Computer_Pass = "System/Computer"
+	
 		default_dir = dirinfo(0)
 	
 	/*バージョン情報の読み込み*/
 		notesel about_walls
 		noteload "System/Computer/C@Drive/walls/about/about.wal"
-		noteget about_walls_title, 0
+		noteget about_walls_title, 1
 	
 	/*タイトル表示*/
 		title about_walls_title
@@ -44,6 +46,8 @@
 #uselib "user32.dll"
 	#func SetParentA "SetParent" int,int					;親子ウィンドウの作成に使う
 	#cfunc WindowFromPointA "WindowFromPoint" int, int		;ウィンドウを動かすときに使う
+	
+	#func MoveWindowA "MoveWindow" int, int, int, int, int, int
 	
 	#func GetFocusA "GetFocus"								;フォーカスのあるウィンドウのハンドルを取得
 	
@@ -265,13 +269,15 @@
 	return
 	
 /*子ウィンドウの作成・表示*/
-#deffunc windowmake int wID, int windowx, int windowy, int window_mode
-	bgscr wID,windowx,windowy
+#deffunc windowmake int wID, int windowx, int windowy, int window_mode, int slide_tof
+	if slide_tof = 1 {
+		bgscr wID, windowx, windowy, (scx@/2)-(windowx/2), -windowy
+	} else {
+		bgscr wID, windowx, windowy
+	}
 	
 	phwnd@.wID = hwnd
 	windows@=windows@+1		;子ウィンドウの総数
-	scx@=windowx
-	scy@=windowy
 	
 	SetParent phwnd@.wID,phwnd@.0
 	
@@ -279,6 +285,31 @@
 	windowmode@.wID@ = window_mode	;ウィンドウモード
 	
 	gsel wID@
+	return
+	
+/*子ウィンドウを上から下にスライドさせる*/
+#deffunc windowslide int wID, int windowx, int windowy
+	if wID = 0 {
+		return
+	}
+	
+	j = windowy + (scy@/2 - windowy/2) + (scy@/2)
+	rad = double(0.00)
+	
+	repeat
+		gsel wID@
+	
+		rad += 0.01
+	
+		MoveWindowA@ hwnd, (scx@/2)-(windowx/2), (sin(rad)*j)-windowy-scy@/2, windowx, windowy, 1
+	
+		if rad >= 1.60 {
+			break
+		}
+		
+		await 5
+	loop
+	
 	return
 	
 /*各項目の読み込み（使用例：get_chapter(元の変数, "検索する項目", "始点区切りコード", "終端コード") ）*/
@@ -658,6 +689,7 @@
 		
 	//ショートカット、ウィジェット配置
 		font systemfont, 12
+		color 255, 255, 255
 		
 		//マイコンピュータ
 			pos 10, 10 : gmode 2 : gcopy 27, 0, 0, 64, 64
@@ -666,6 +698,10 @@
 		//設定
 			pos 10, 80 : gmode 2 : gcopy 28, 0, 0, 64, 64
 			cmes "設定", 10, 80+55, 10+64, 80+70
+	
+		//Umbrella
+			pos 10, 150 : gmode 2 : gcopy 37, 0, 0, 64, 64
+			cmes "Umbrella", 10, 150+55, 10+64, 150+70
 	
 	//画面をバッファ
 		if sub = 0 {
@@ -856,10 +892,12 @@
 	WindowSize_X = 800
 	WindowSize_Y = 500
 	
-	windowmake wID, WindowSize_X, WindowSize_Y, 1
+	windowmake wID, WindowSize_X, WindowSize_Y, 1, 1
 	
 	eID_hwnd(eID) = hwnd
 	eID_wID(eID) = wID
+	
+	new_window = wID
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
@@ -929,6 +967,11 @@
 	
 	notesel window_data
 	noteadd "1", (wID-first_wID), 1
+	
+	if new_window = wID {
+		windowslide wID, WindowSize_X, WindowSize_Y
+		new_window = 0
+	}
 	
 	stop
 	
@@ -1025,23 +1068,25 @@
 		notesel type_of_wID
 		noteadd now, (wID-first_wID), 1
 	
-		WindowSize_X = about_ax__Size_X +2
-		WindowSize_Y = about_ax__Size_Y +32+1
+		WindowSize_X_ax = about_ax__Size_X +2
+		WindowSize_Y_ax = about_ax__Size_Y +32+1
 		
-		windowmake wID, WindowSize_X, WindowSize_Y, 1
+		windowmake wID, WindowSize_X_ax, WindowSize_Y_ax, 1, 0
 	
 		notesel window_data
 		noteadd "1", (wID-first_wID), 1
+	
+		new_window = wID
 		
 		onclick gosub *on_click
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-60, 0 : button "", *window_minimization
+		pos WindowSize_X_ax-60, 0 : button "", *window_minimization
 		
 	//閉じるボタン
 		objimage 26, 0, 0, 30, 30 : objsize 30, 30
-		pos WindowSize_X-30, 0 : button "", *window_close
+		pos WindowSize_X_ax-30, 0 : button "", *window_close
 		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
 	
 	//タイトルバー及び枠
@@ -1054,9 +1099,17 @@
 	
 	//ディレクトリ変更
 		chdir File_Explorer__Dir
+	
+	//ウィンドウを開いた直後の場合はウィンドウをスライドさせる
+		if new_window = wID {
+			windowslide wID, WindowSize_X_ax, WindowSize_Y_ax
+			new_window = 0
+		}
 		
 	//実行
 		HSPCreateThread hwnd, ax_file, 1, 32, about_ax__Size_X, about_ax__Size_Y, 0x100
+	
+		gsel 0
 	
 	stop
 	
@@ -1091,10 +1144,12 @@
 			WindowSize_X = 800
 			WindowSize_Y = 500
 			
-			windowmake wID, WindowSize_X, WindowSize_Y, 1
+			windowmake wID, WindowSize_X, WindowSize_Y, 1, 1
 		
 			notesel window_data
 			noteadd "1", (wID-first_wID), 1
+	
+			new_window = wID
 			
 			onclick gosub *on_click
 		}
@@ -1102,10 +1157,10 @@
 		notesel type_of_wID
 		noteadd now, (wID-first_wID), 1
 		
-		gsel get_wID_with_Focus()
+		gsel wID
 		
 		clrobj
-	
+		
 		onclick gosub *on_click
 	
 	//最小化ボタン
@@ -1160,6 +1215,9 @@
 		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
 		pos 45, 133 : mes "デザイン設定"
 	
+		pos 10, 170 : gmode 2 : gcopy 38, 0, 0, 32, 32
+		pos 45, 173 : mes "About"
+	
 	//メインメニュー部分
 		color 128, 128, 128
 		
@@ -1167,29 +1225,28 @@
 		pos 215, 50 : mes "Wallsの設定"
 		
 		font systemfont, 14
-	
-		color 239, 239, 239 : boxf 300-30, 100-20, 300+30+64, 100+64+10+20+20
 			
 		pos 300, 100 : gmode 2 : gcopy 32, 0, 0, 64, 64
 		color 128, 128, 128
 		cmes "ユーザー設定", 300-30, 100+64+10, 300+30+64, 100+64+10+20
 		
-		color 239, 239, 239 : boxf 450-30, 100-20, 450+30+64, 100+64+10+20+20
-		
 		pos 450, 100 : gmode 2 : gcopy 33, 0, 0, 64, 64
 		color 128, 128, 128
 		cmes "デザイン設定", 450-30, 100+64+10, 450+30+64, 100+64+10+20
+		
+		pos 600, 100 : gmode 2 : gcopy 39, 0, 0, 64, 64
+		color 128, 128, 128
+		cmes "About", 600-30, 100+64+10, 600+30+64, 100+64+10+20
+	
+	//ウィンドウを開いた直後の場合はウィンドウをスライドさせる
+		if new_window = wID {
+			windowslide wID, WindowSize_X, WindowSize_Y
+			new_window = 0
+		}
 	
 	stop
 	
 *Settings__User
-	notesel type_of_wID
-	noteget type_of_wID__buf, (get_wID_with_Focus()-first_wID)
-	
-	if type_of_wID != "" and instr(type_of_wID, 0, "Settings") = -1 {
-		stop
-	}
-	
 	now = "Settings__User"
 	
 	notesel type_of_wID
@@ -1198,6 +1255,8 @@
 	gsel get_wID_with_Focus()
 	
 	clrobj
+	
+	onclick gosub *on_click
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
@@ -1232,6 +1291,9 @@
 	
 		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
 		pos 45, 133 : mes "デザイン設定"
+	
+		pos 10, 170 : gmode 2 : gcopy 38, 0, 0, 32, 32
+		pos 45, 173 : mes "About"
 	
 	//設定部分
 		color 128, 128, 128
@@ -1287,7 +1349,7 @@
 			rename "System/Computer/C@Drive/user/"+registered_user_buf+"/", "System/Computer/C@Drive/user/"+registered_user(user_num)+""
 	
 			if stat != 0 {
-				dialog "ユーザー名を変更できませんでした。\nその他の設定を保存します。", 1
+				dialog "ユーザー名を変更できませんでした。\nユーザー名以外の設定を保存します。", 1
 	
 				registered_user(user_num) = registered_user_buf
 				
@@ -1306,13 +1368,6 @@
 	return
 	
 *Settings__Design
-	notesel type_of_wID
-	noteget type_of_wID__buf, (get_wID_with_Focus()-first_wID)
-	
-	if type_of_wID != "" and instr(type_of_wID, 0, "Settings") = -1 {
-		stop
-	}
-	
 	now = "Settings__Design"
 	
 	notesel type_of_wID
@@ -1321,6 +1376,8 @@
 	gsel get_wID_with_Focus()
 	
 	clrobj
+	
+	onclick gosub *on_click
 	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
@@ -1355,6 +1412,9 @@
 	
 		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
 		pos 45, 133 : mes "デザイン設定"
+	
+		pos 10, 170 : gmode 2 : gcopy 38, 0, 0, 32, 32
+		pos 45, 173 : mes "About"
 	
 	//設定部分
 		color 128, 128, 128
@@ -1412,6 +1472,155 @@
 	noteadd systemfont, 7, 1
 	
 	notesave "System/Computer/C@Drive/user/"+registered_user(0)+"/config.wal"
+	
+	return
+	
+*Settings__About
+	now = "Settings__About"
+	
+	notesel type_of_wID
+	noteadd now, (wID-first_wID), 1
+	
+	gsel get_wID_with_Focus()
+	
+	clrobj
+	
+	onclick gosub *on_click
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+	//タイトルバー及び枠
+		color 0, 61, 51 : boxf
+	
+		font systemfont, 14
+	
+		color 255, 255, 255
+		cmes "設定 - About", 0, 10, 800+2, 32
+	
+	//設定のメインメニューを開く
+		color 239, 239, 239 : boxf 1, 40, 800-2, 500-1
+		color 0, 105, 92 : boxf 1, 40, 200, 500-1
+	
+	//左側のメニューに項目を表示させる
+		font systemfont, 18
+		color 255, 255, 255
+	
+		pos 10, 50 : gmode 2 : gcopy 29, 0, 0, 32, 32
+		pos 45, 53 : mes "メインメニュー"
+	
+		pos 10, 90 : gmode 2 : gcopy 30, 0, 0, 32, 32
+		pos 45, 93 : mes "ユーザー設定"
+	
+		pos 10, 130 : gmode 2 : gcopy 31, 0, 0, 32, 32
+		pos 45, 133 : mes "デザイン設定"
+	
+		pos 10, 170 : gmode 2 : gcopy 38, 0, 0, 32, 32
+		pos 45, 173 : mes "About"
+	
+	//表示部分
+		color 128, 128, 128
+		
+		font systemfont, 22
+		pos 215, 50 : mes "About"
+	
+		font systemfont, 14
+	
+		//ロゴ＋タイトル
+			color 255, 255, 255
+			pos 200+43, 80     : gmode 2 : gcopy 1, 0, 0, 124, 124
+			pos 200+43+124, 80 : gmode 4, 388, 124, 256 : gcopy 40, 0, 0, 388, 124
+	
+		//情報取得
+			notesel about_walls
+			noteload ""+Computer_Pass+"/C@Drive/walls/about/about.wal"
+	
+			noteget about_walls__title, 1
+			noteget about_walls__version, 3
+			noteget about_walls__build_num, 5
+			noteget about_walls__kernel_version, 7
+	
+		//詳細表示
+			color 0, 0, 0
+			
+			pos 200+150, 250 : mes ""+about_walls__title+"\n\nVersion\nBuild Number\nKernel Version"
+			pos 200+300, 250 : mes "\n\n"+about_walls__version+"\n"+about_walls__build_num+"\n"+about_walls__kernel_version+""
+	
+			font systemfont, 12
+			cmes "Copyright (C) 2014-2017 YotioSoft All Rights Reserved.", 200, 470, 800, 500
+	
+	stop
+		
+/*----------------------------------------------------------Umbrella-----------------------------------------------------------------*/
+
+*Umbrella
+	now = "Umbrella"
+	
+	wID = new_wID
+	
+	WindowSize_X = 800
+	WindowSize_Y = 500
+	
+	new_window = wID
+	
+	windowmake wID, WindowSize_X, WindowSize_Y, 1, 1
+	
+	notesel window_data
+	noteadd "1", (wID-first_wID), 1
+	
+	onclick gosub *on_click
+	
+	notesel type_of_wID
+	noteadd now, (get_wID_with_Focus()-first_wID), 1
+	
+	gsel wID
+	
+	notesel type_of_wID
+	noteget type_of_wID__buf, (get_wID_with_Focus()-first_wID)
+	
+	if type_of_wID != "" and instr(type_of_wID, 0, "Umbrella") = -1 {
+		stop
+	}
+	
+	clrobj
+	
+	//最小化ボタン
+		objimage 25, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-60, 0 : button "", *window_minimization
+		
+	//閉じるボタン
+		objimage 26, 0, 0, 30, 30 : objsize 30, 30
+		pos WindowSize_X-30, 0 : button "", *window_close
+		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
+	
+	//ベース部分の描写
+		gosub *Draw_Umbrella_Background
+	
+	//ウィンドウを開いた直後の場合はウィンドウをスライドさせる
+		if new_window = wID {
+			windowslide wID, WindowSize_X, WindowSize_Y
+			new_window = 0
+		}
+	
+	//天気表示部分
+		#include "umbrella.hsp"
+	
+	stop
+	
+*Draw_Umbrella_Background
+	color 239, 239, 239 : boxf
+	color 30, 136, 229 : boxf 0, 0, 800, 40
+	color 106, 183, 255 : boxf 0, 40, 200, 500
+	
+	font systemfont, 14
+	color 255, 255, 255
+	cmes "Umbrella", 0, 10, 800+2, 32
 	
 	return
 	
@@ -1513,7 +1722,7 @@
 	/*子ウィンドウを動かす以外の目的でクリックされたときの動作*/
 	
 	//アクティブなウィンドウのハンドル値を取得
-		Focus_hand = WindowFromPointA( ginfo(0), ginfo(1) )
+		GetFocusA : Focus_hand = stat
 		
 	//現在アクティブなウィンドウが何のウィンドウかを取得
 		notesel type_of_wID
@@ -1524,7 +1733,7 @@
 		gsel get_wID_with_Focus()
 		
 	//親ウィンドウ上での動作
-		if Focus_hand = parent_hwnd {
+		if Focus_hand = parent_hwnd and type_of_wID__buf != "run__ax" {
 			gsel 0
 			
 			//スタートメニュー
@@ -1540,17 +1749,21 @@
 				}
 		
 			//デスクトップ画面（*desktop_screen）のアイコン
-				GetFocusA : Focus_hand = stat
-				
-				if click_range(10, 10, 10+64, 10+70) and now != "File_Explorer" and now!= "run_ax" and now != "Settings" and parent_hwnd = Focus_hand {
+				if click_range(10, 10, 10+64, 10+70) {
 					if covered(mousex,mousey) = "desktop_screen" {
 						goto *File_Explorer
 					}
 				}
 	
-				if click_range(10, 80, 10+64, 80+70) and now != "File_Explorer" and now!= "run_ax" and now != "Settings" and parent_hwnd = Focus_hand {
+				if click_range(10, 80, 10+64, 80+70) {
 					if covered(mousex,mousey) = "desktop_screen" {
 						goto *Settings
+					}
+				}
+	
+				if click_range(10, 150, 10+64, 150+70) {
+					if covered(mousex,mousey) = "desktop_screen" {
+						goto *Umbrella
 					}
 				}
 		}
@@ -1562,7 +1775,7 @@
 		}
 	
 	//設定（*settings or *settings_○○）
-		if type_of_wID__buf = "Settings" or type_of_wID__buf = "Settings__User" or type_of_wID__buf = "Settings__Design" {
+		if type_of_wID__buf = "Settings" or type_of_wID__buf = "Settings__User" or type_of_wID__buf = "Settings__Design" or type_of_wID__buf = "Settings__About" {
 			gsel get_wID_with_Focus()
 			gosub *on_click__Settings
 		}
@@ -1631,6 +1844,9 @@
 	if click_range(10, 130, 200, 170) = 1 {
 		goto *Settings__Design
 	}
+	if click_range(10, 170, 200, 210) = 1 {
+		goto *Settings__About
+	}
 	
 	if type_of_wID__buf = "Settings" {
 		if click_range(300-30, 100, 300+30+64, 100+64+10+20) = 1 {
@@ -1638,6 +1854,9 @@
 		}
 		if click_range(450-30, 100, 450+30+64, 100+64+10+20) = 1 {
 			goto *Settings__Design
+		}
+		if click_range(600-30, 100, 600+30+64, 100+64+10+20) = 1 {
+			goto *Settings__About
 		}
 	}
 	
