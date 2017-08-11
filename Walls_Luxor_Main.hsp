@@ -312,10 +312,13 @@
 	
 	return
 	
-/*各項目の読み込み（使用例：get_chapter(元の変数, "検索する項目", "始点区切りコード", "終端コード") ）*/
-#defcfunc get_chapter var underlying_var, str search_chapter, str punctuate, str end_word
-	value = instr(underlying_var, 0, search_chapter)
-	get_chapter_buf = strmid ( underlying_var, value + strlen(""+search_chapter+""+punctuate+""), instr(underlying_var, value + strlen(""+search_chapter+""+punctuate+""), end_word) )
+/*各項目の読み込み（使用例：get_chapter(元の変数, "検索する項目", "始点区切りコード", "終端コード", 検索開始する位置[Byte単位]) ）*/
+#defcfunc get_chapter var underlying_var, str search_chapter, str punctuate, str end_word, int begin
+	value = instr(underlying_var, begin, search_chapter)
+	get_chapter_buf = strmid ( underlying_var, value + begin + strlen(""+search_chapter+""+punctuate+""), instr(underlying_var, value + begin + strlen(""+search_chapter+""+punctuate+""), end_word) )
+	
+	//valueの内容をvalstat変数に保存
+		valstat@ = value
 	
 	return get_chapter_buf
 	
@@ -360,7 +363,15 @@
 	
 	return wID_buf
 	
+/*スクロールバー設置＆スクロール位置の取得*/
+#defcfunc scrollbar int wID, int size_x, int size_y
+	gsel wID
+	
+	return
+	
 #global
+
+/*------------------------------------------------------------------起動-----------------------------------------------------------------------*/
 	
 *boot
 	/*ここから起動画面*/
@@ -899,6 +910,9 @@
 	
 	new_window = wID
 	
+	//現在アクティブな子ウィンドウを検出（どのウィンドウを消すか）
+		GetFocusA : Focus_hand = stat
+	
 	//最小化ボタン
 		objimage 25, 0, 0, 30, 30 : objsize 30, 30
 		pos WindowSize_X-60, 0 : button "", *window_minimization
@@ -908,10 +922,12 @@
 		pos WindowSize_X-30, 0 : button "", *window_close
 		close_button_hwnd(wID-first_wID) = objinfo(stat, 2)
 	
+	//ウィンドウがある位置
+		File_Explorer__wx = ginfo_wx1
+		File_Explorer__wy = ginfo_wy1
+	
 *File_Explorer__draw
 	//どのエクスプローラーがアクティブか確認
-		GetFocusA : Focus_hand = stat
-	
 		eID = -1
 		
 		repeat new_eID+1
@@ -920,7 +936,7 @@
 				break
 			}
 		loop
-	
+		
 		gsel eID_wID(eID)
 		
 	//背景色
@@ -1526,9 +1542,6 @@
 	
 	//表示部分
 		color 128, 128, 128
-		
-		font systemfont, 22
-		pos 215, 50 : mes "About"
 	
 		font systemfont, 14
 	
@@ -1538,6 +1551,8 @@
 			pos 200+43+124, 80 : gmode 4, 388, 124, 256 : gcopy 40, 0, 0, 388, 124
 	
 		//情報取得
+			chdir default_dir
+			
 			notesel about_walls
 			noteload ""+Computer_Pass+"/C@Drive/walls/about/about.wal"
 	
@@ -1799,7 +1814,7 @@
 		gsel eID_wID(eID)
 		
 		//フォルダ・ファイルを開く
-			if click_range(File_Explorer__border_Sidemenu_x, File_Explorer__border_2nd_menu_y, WindowSize_X, WindowSize_Y) = 1 {
+			if click_range(File_Explorer__border_Sidemenu_x, File_Explorer__border_2nd_menu_y, WindowSize_X-50, WindowSize_Y) = 1 {
 				clicked_file_number = ( ginfo_my-ginfo_wy1-(File_Explorer__border_2nd_menu_y+20) )/32
 
 				if clicked_file_number > get_files__total_files(eID)-1 {

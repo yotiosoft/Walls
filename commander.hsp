@@ -1,0 +1,162 @@
+#module
+	#uselib "gdi32.dll"
+	#func GetTextExtentPoint32 "GetTextExtentPoint32A" int,str,int,var
+	#defcfunc GetStringWidth str string
+		dim pt,2
+		GetTextExtentPoint32 hdc,string,strlen(string),pt
+		return pt
+#global
+
+screen 0, 800, 500
+commander__bgr = 50 : commander__bgg = 50 : commander__bgb = 50
+
+cmdline = 0
+commander_now_dir = "C:\\"
+
+*first_print
+	commander_print_type(cmdline) = "First_Print"
+	commander_print_type(cmdline+1) = "First_Print"
+	commander_print_type(cmdline+2) = "First_Print"
+	commander_print_type(cmdline+3) = "First_Print"
+	
+	commander_print(cmdline) = "YotioSoft Walls 6.0"
+	commander_print(cmdline+1) = "Walls Commander Ver.0.1"
+	commander_print(cmdline+2) = "(C) YotioSoft 2017 All rigths reserved."
+	commander_print(cmdline+3) = ""
+	
+	cmdline += 4
+	
+	goto *main
+	
+*print_now_dir
+	commander_print_type(cmdline) = "now_dir"
+	commander_print(cmdline) = ""+commander_now_dir+">"
+	
+	cmdline ++
+	
+	goto *main
+	
+*main
+	repeat
+		redraw 0
+		
+		color commander__bgr, commander__bgg, commander__bgb : boxf
+		last_commander_print_type = commander_print_type(cmdline-1)
+		
+		repeat cmdline + commander_input_now
+			if commander_print_type(cnt) = "First_Print" {
+				color 195, 195, 195
+			}
+			if commander_print_type(cnt) = "now_dir" {
+				color 255, 201, 14
+			}
+			if commander_print_type(cnt) = "key" {
+				color 255, 255, 255
+			}
+			
+			pos 10, 10 + cnt * 20 : mes commander_print(cnt)
+	
+			if cnt = cmdline + commander_input_now - 1 {
+				pos GetStringWidth(commander_print(cnt))+12, 10 + cnt * 20 : mes"_"
+			}
+		
+		loop
+		
+		if last_commander_print_type = "First_Print" and cnt = 50 {
+			goto *print_now_dir
+		}
+	
+		onkey gosub *get_key
+	
+		redraw 1
+		wait 1
+	loop
+	
+*get_key
+	commander_print_type(cmdline) = "key"
+	
+	commander_input_now = 1
+	
+	getkey pushed, 65
+	if pushed = 1 : commander_print(cmdline) += "a" : return
+	getkey pushed, 66
+	if pushed = 1 : commander_print(cmdline) += "b" : return
+	getkey pushed, 67
+	if pushed = 1 : commander_print(cmdline) += "c" : return
+	getkey pushed, 68
+	if pushed = 1 : commander_print(cmdline) += "d" : return
+	getkey pushed, 69
+	if pushed = 1 : commander_print(cmdline) += "e" : return
+	getkey pushed, 70
+	if pushed = 1 : commander_print(cmdline) += "f" : return
+	getkey pushed, 71
+	if pushed = 1 : commander_print(cmdline) += "g" : return
+	getkey pushed, 72
+	if pushed = 1 : commander_print(cmdline) += "h" : return
+	getkey pushed, 73
+	if pushed = 1 : commander_print(cmdline) += "i" : return
+	getkey pushed, 74
+	if pushed = 1 : commander_print(cmdline) += "j" : return
+	getkey pushed, 75
+	if pushed = 1 : commander_print(cmdline) += "k" : return
+	getkey pushed, 76
+	if pushed = 1 : commander_print(cmdline) += "l" : return
+	getkey pushed, 77
+	if pushed = 1 : commander_print(cmdline) += "m" : return
+	getkey pushed, 78
+	if pushed = 1 : commander_print(cmdline) += "n" : return
+	getkey pushed, 79
+	if pushed = 1 : commander_print(cmdline) += "o" : return
+	getkey pushed, 80
+	if pushed = 1 : commander_print(cmdline) += "p" : return
+	getkey pushed, 81
+	if pushed = 1 : commander_print(cmdline) += "q" : return
+	getkey pushed, 82
+	if pushed = 1 : commander_print(cmdline) += "r" : return
+	getkey pushed, 83
+	if pushed = 1 : commander_print(cmdline) += "s" : return
+	getkey pushed, 84
+	if pushed = 1 : commander_print(cmdline) += "t" : return
+	getkey pushed, 85
+	if pushed = 1 : commander_print(cmdline) += "u" : return
+	getkey pushed, 86
+	if pushed = 1 : commander_print(cmdline) += "v" : return
+	getkey pushed, 87
+	if pushed = 1 : commander_print(cmdline) += "w" : return
+	getkey pushed, 88
+	if pushed = 1 : commander_print(cmdline) += "x" : return
+	getkey pushed, 89
+	if pushed = 1 : commander_print(cmdline) += "y" : return
+	getkey pushed, 90
+	if pushed = 1 : commander_print(cmdline) += "z" : return
+	
+	; Back Spaceキー
+		getkey pushed, 8
+		if pushed = 1 {
+			if strlen(commander_print(cmdline)) > 0 {
+				poke commander_print(cmdline), strlen(commander_print(cmdline))-1, 0
+			} else {
+				cmdline --
+			}
+			return
+		}
+		
+	; Enterキー
+		getkey pushed, 13
+		if pushed = 1 {
+			cmdline ++
+			commander_input_now = 0
+			commander_print(cmdline) += ""
+			return
+		}
+	
+	; スペースキー
+		getkey pushed, 32
+		if pushed = 1 {
+			commander_print(cmdline) += " "
+			return
+		}
+	
+	commander_print(cmdline) += ""
+	
+	return

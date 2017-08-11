@@ -1,5 +1,5 @@
 ; Walls Luxor Buffer.hsp
-	total_buffer_things = 40
+	total_buffer_things = 57			; 読み込み画像数（新しい画像ファイルを増やしたら必ずこの値も増やすこと！）
 	
 	now_sourcecode = "buffer.hsp"		; 現在読み込んでいるソースコード
 	
@@ -70,6 +70,23 @@
 //Umbrellaで使うアイコン
 	noteadd "umbrella/umbrella_logo.png", 34, 1			; Umbrella ロゴ
 	noteadd "umbrella/umbrella_logo_2.png", 35, 1		; Umbrella ロゴ（小）
+	noteadd "umbrella/Sunny.png", 41, 1					; 晴れ
+	noteadd "umbrella/Mostly Cloudy.png", 42, 1			; 晴れ時々くもり
+	noteadd "umbrella/Cloudy.png", 43, 1				; くもり
+	noteadd "umbrella/Broken Cloudy.png", 44, 1			; 不規則なくもり
+	noteadd "umbrella/Slight Drizzle.png", 45, 1		; にわか雨
+	noteadd "umbrella/Drizzle.png", 46, 1				; 雨
+	noteadd "umbrella/Thunderstorms.png", 47, 1			; 雷
+	noteadd "umbrella/Snow.png", 48, 1					; 雪
+	noteadd "umbrella/Haze.png", 49, 1					; 霧
+	noteadd "umbrella/Bg_Sunny.jpg", 50, 1				; 背景画像 : 晴れ
+	noteadd "umbrella/Bg_Mostly Cloudy.jpg", 51, 1		; 背景画像 : 晴れ時々くもり
+	noteadd "umbrella/Bg_Cloudy.jpg", 52, 1				; 背景画像 : くもり
+	noteadd "umbrella/Bg_Broken Cloudy.jpg", 53, 1		; 背景画像 : 不規則なくもり
+	noteadd "umbrella/Bg_Rain.jpg", 54, 1				; 背景画像 : 雨
+	noteadd "umbrella/Bg_Thunderstorms.jpg", 55, 1		; 背景画像 : 雷
+	noteadd "umbrella/Bg_Snow.jpg", 56, 1				; 背景画像 : 雪
+	noteadd "umbrella/Bg_Haze.jpg", 57, 1				; 背景画像 : 霧
 	
 //ボタン
 	noteadd "buttons/button_gray_and_blue.png", 36, 1	; ボタン（常時グレー/マウスオーバー時青）
@@ -79,7 +96,6 @@
 	
 //読み込み開始
 	notesel buffer_things
-	
 	repeat total_buffer_things + 1
 		notesel buffer_things
 		noteget buffer_thing, cnt

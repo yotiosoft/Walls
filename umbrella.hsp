@@ -1,21 +1,575 @@
 *loading_umbrella_config
+	chdir default_dir
+	
 	notesel umbrella_config
 	noteload ""+Computer_Pass+"/C@Drive/user/"+registered_user(user_num)+"/umbrella_config.wal"
 	
-	default_city = get_chapter(umbrella_config, "default", " = \"", "\";")
+	default_city_name = ""
+	default_city_id = -1
 	
-	if default_city = "" {
-		goto *Set_City
-	} else {
-		goto *Umbrella_Home
+	repeat notemax
+		notesel umbrella_config
+		noteget umbrella_config_tmp, cnt
+	
+		if instr(umbrella_config_tmp, 0, "*") != -1 {
+			split umbrella_config_tmp, ", ", default_city_name, default_city_id
+			default_city_id = int(default_city_id)
+		}
+	loop
+	
+	//まだデフォルトの地域の設定がされていない場合は地域設定へ
+		if default_city_id = -1 {
+			goto *Set_City
+		} else {
+			done_get_weather = 0
+	
+			city_name = default_city_name
+			city_id = default_city_id
+			
+			goto *Umbrella_Start
+		}
+	
+	stop
+	
+*Umbrella_Start
+	Umbrella_City_Name = default_city_name
+	Umbrella_City_ID = default_city_id
+	
+	if instr(Umbrella_City_Name, 0, "*") != -1 {
+		Umbrella_City_Name = strmid(Umbrella_City_Name, 1, strlen(Umbrella_City_Name)-1)
 	}
 	
-	stop
+	goto *Umbrella_Home
 	
+/*---------------------------------------------------------------ホーム画面------------------------------------------------------------------*/
+
 *Umbrella_Home
+	clrobj
 	gosub *Draw_Umbrella_Background
 	
+	Window_Size_X__Umbrella = ginfo(10)
+	Window_Size_Y__Umbrella = ginfo(11)
+	
+	//画面左のメニューバー
+		pos 10, 50 : gmode 2 : gcopy 29, 0, 0, 32, 32
+		pos 45, 53 : mes "地域設定"
+	
+	//天気予報表示部分
+		//まだ取得していない場合は取得しに行く
+			if done_get_weather = 0 {
+				goto *get_weather
+			}
+	
+		//背景画像
+			weather_bg_now = 0
+			
+			if weather_img_now = "01" {
+				weather_icon_now = 41
+				weather_bg_now = 50
+			}
+			if weather_img_now = "02" {
+				weather_icon_now = 42
+				weather_bg_now = 51
+			}
+			if weather_img_now = "03" {
+				weather_icon_now = 43
+				weather_bg_now = 52
+			}
+			if weather_img_now = "04" {
+				weather_icon_now = 44
+				weather_bg_now = 53
+			}
+			if weather_img_now = "09d" {
+				weather_icon_now = 45
+				weather_bg_now = 54
+			}
+			if weather_img_now = "10d" {
+				weather_icon_now = 46
+				weather_bg_now = 54
+			}
+			if weather_img_now = "11d" {
+				weather_icon_now = 47
+				weather_bg_now = 55
+			}
+			if weather_img_now = "13d" {
+				weather_icon_now = 48
+				weather_bg_now = 56
+			}
+			if weather_img_now = "50d" {
+				weather_icon_now = 49
+				weather_bg_now = 57
+			}
+	
+			buffer (100000+weather_bg_now), 600, 60
+				pos 0, 0 : gzoom Window_Size_X__Umbrella, Window_Size_Y__Umbrella, weather_bg_now, 0, 0, 640, 460
+				gblur 3
+	
+			buffer (100000+weather_icon_now), 128, 128
+				pos 0, 0 : gzoom 128, 128, weather_icon_now, 0, 0, 480, 480, 1
+	
+			gsel wID
+			
+			pos 200, 40 : gzoom Window_Size_X__Umbrella, Window_Size_Y__Umbrella, weather_bg_now, 0, 0, 600, 460
+			pos 200, 40 : gcopy (100000+weather_bg_now), 0, 0, 600, 60
+	
+			font systemfont, 36 : color 255, 255, 255
+			pos 200+10, 40+10 : mes Umbrella_City_Name
+	
+			pos 200+20, 100+10 : gmode 2 : gcopy (100000+weather_icon_now), 0, 0, 128, 128
+	
 	stop
+	
+/*--------------------------------------------------------------天気予報取得-----------------------------------------------------------------*/
+
+*get_weather
+	//現在の天気を取得
+		//データをダウンロード
+			#include "hspinet.as"
+			
+			alloc buf,1024*1024
+	
+			netinit											;	プラグインの初期化
+			
+			neturl "http://api.openweathermap.org/data/2.5/weather?id="+city_id+"&mode=xml&appid=025b4afa1884c9d2df25f32bc8b2db91"
+		
+			netdlname ""+Computer_Pass+"/C@Drive/walls/umbrella/"+city_id+"_now.owm"	;	ダウンロード後のファイル名
+			netrequest ""																;	ファイル名の指定（ここで指定する）
+			
+			repeat
+				netexec res
+				if res : break
+				await 50
+			loop
+		
+			netterm											;	プラグインの開放
+			
+			notesel get_weather__now_weather
+			noteload ""+Computer_Pass+"/C@Drive/walls/umbrella/"+city_id+"_now.owm"
+	
+		//解析
+			valstat_total = 0
+			
+			//気温
+				//現在の気温
+					temper_now = get_chapter(get_weather__now_weather, "temperature value", "=\"", "\"")
+					temper_now = double(temper_now) - 273.15
+					valstat_total += valstat
+		
+				//今日の最高気温
+					temper_today_max = get_chapter(get_weather__now_weather, "max", "=\"", "\"", valstat_total)
+					temper_today_max = double(temper_today_max) - 273.15
+		
+				//今日の最低気温
+					temper_today_min = get_chapter(get_weather__now_weather, "min", "=\"", "\"", valstat_total)
+					temper_today_min = double(temper_today_min) - 273.15
+	
+			//天気
+				//現在の天気のWeather Numberを取得
+					weather_number_now = get_chapter(get_weather__now_weather, "weather number", "=\"", "\"")
+					weather_number_now = int(weather_number_now)
+					valstat_total += valstat
+	
+				//Weather Numberをもとに天気を取得
+					weather_number_tmp = weather_number_now
+					gosub *get_weather_from_weather_number
+	
+					weather_about_now = weather_about_tmp
+					weather_now = weather_tmp
+					weather_img_now = weather_img_tmp
+				
+			mes temper_now
+			mes temper_today_max
+			mes temper_today_min
+			mes weather_about_now
+			mes weather_now
+			mes weather_img_now
+	
+		done_get_weather = 1
+		goto *Umbrella_Home
+	
+*get_weather_from_weather_number
+	if weather_number_tmp = 200 {
+		weather_about_tmp = "雷"
+		weather_tmp = "雷を伴う小雨"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 201 {
+		weather_about_tmp = "雷"
+		weather_tmp = "雷雨"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 202 {
+		weather_about_tmp = "雷"
+		weather_tmp = "雷を伴う大雨"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 210 {
+		weather_about_tmp = "雷"
+		weather_tmp = "弱い雷"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 211 {
+		weather_about_tmp = "雷"
+		weather_tmp = ""
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 212 {
+		weather_about_tmp = "雷"
+		weather_tmp = "強い雷"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 221 {
+		weather_about_tmp = "雷"
+		weather_tmp = "不規則な雷"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 230 {
+		weather_about_tmp = "雷"
+		weather_tmp = "雷を伴う薄い霧"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 231 {
+		weather_about_tmp = "雷"
+		weather_tmp = "雷を伴う霧"
+		weather_img_tmp = "11d"
+	}
+	if weather_number_tmp = 232 {
+		weather_about_tmp = "雷"
+		weather_tmp = "雷を伴う濃い霧"
+		weather_img_tmp = "11d"
+	}
+	
+	if weather_number_tmp = 300 {
+		weather_about_tmp = "霧"
+		weather_tmp = "薄い霧"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 301 {
+		weather_about_tmp = "霧"
+		weather_tmp = ""
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 302 {
+		weather_about_tmp = "霧"
+		weather_tmp = "濃い霧雨"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 310 {
+		weather_about_tmp = "霧"
+		weather_tmp = "薄い霧雨"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 311 {
+		weather_about_tmp = "霧"
+		weather_tmp = "霧雨"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 312 {
+		weather_about_tmp = "霧"
+		weather_tmp = "濃い霧雨"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 313 {
+		weather_about_tmp = "霧"
+		weather_tmp = "にわか雨を伴う霧"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 314 {
+		weather_about_tmp = "霧"
+		weather_tmp = "強いにわか雨を伴う霧"
+		weather_img_tmp = "09d"
+	}
+	if weather_number_tmp = 315 {
+		weather_about_tmp = "霧"
+		weather_tmp = "にわか霧"
+		weather_img_tmp = "09d"
+	}
+	
+	if weather_number_tmp = 500 {
+		weather_about_tmp = "雨"
+		weather_tmp = "小雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 501 {
+		weather_about_tmp = "雨"
+		weather_tmp = ""
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 502 {
+		weather_about_tmp = "雨"
+		weather_tmp = "大雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 503 {
+		weather_about_tmp = "雨"
+		weather_tmp = "強雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 504 {
+		weather_about_tmp = "雨"
+		weather_tmp = "とても強い大雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 511 {
+		weather_about_tmp = "雨"
+		weather_tmp = "凍雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 520 {
+		weather_about_tmp = "雨"
+		weather_tmp = "軽いにわか雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 521 {
+		weather_about_tmp = "雨"
+		weather_tmp = "にわか雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 522 {
+		weather_about_tmp = "雨"
+		weather_tmp = "強いにわか雨"
+		weather_img_tmp = "10d"
+	}
+	if weather_number_tmp = 531 {
+		weather_about_tmp = "雨"
+		weather_tmp = "不規則なにわか雨"
+		weather_img_tmp = "10d"
+	}
+	
+	if weather_number_tmp = 600 {
+		weather_about_tmp = "雪"
+		weather_tmp = "小雪"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 601 {
+		weather_about_tmp = "雪"
+		weather_tmp = ""
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 602 {
+		weather_about_tmp = "雪"
+		weather_tmp = "大雪"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 611 {
+		weather_about_tmp = "雪"
+		weather_tmp = "みぞれ"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 612 {
+		weather_about_tmp = "雪"
+		weather_tmp = "にわかみぞれ"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 615 {
+		weather_about_tmp = "雪"
+		weather_tmp = "小雨時々雪"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 616 {
+		weather_about_tmp = "雪"
+		weather_tmp = "雨時々雪"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 620 {
+		weather_about_tmp = "雪"
+		weather_tmp = "にわか小雪"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 621 {
+		weather_about_tmp = "雪"
+		weather_tmp = "にわか雪"
+		weather_img_tmp = "13d"
+	}
+	if weather_number_tmp = 622 {
+		weather_about_tmp = "雪"
+		weather_tmp = "激しいにわか雪"
+		weather_img_tmp = "13d"
+	}
+	
+	if weather_number_tmp = 701 {
+		weather_about_tmp = "霞"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 711 {
+		weather_about_tmp = "煙たい"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 721 {
+		weather_about_tmp = "薄い霧"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 731 {
+		weather_about_tmp = "砂塵旋風"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 741 {
+		weather_about_tmp = "濃い霧"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 751 {
+		weather_about_tmp = "黄砂"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 761 {
+		weather_about_tmp = "塵"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 762 {
+		weather_about_tmp = "火山灰"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 771 {
+		weather_about_tmp = "スコール"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	if weather_number_tmp = 781 {
+		weather_about_tmp = "竜巻"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	
+	if weather_number_tmp = 701 {
+		weather_about_tmp = "霞"
+		weather_tmp = ""
+		weather_img_tmp = "50d"
+	}
+	
+	if weather_number_tmp = 800 {
+		weather_about_tmp = "快晴"
+		weather_tmp = ""
+		weather_img_tmp = "01"
+	}
+	if weather_number_tmp = 801 {
+		weather_about_tmp = "晴れ"
+		weather_tmp = ""
+		weather_img_tmp = "02"
+	}
+	if weather_number_tmp = 802 {
+		weather_about_tmp = "晴れ"
+		weather_tmp = "ちぎれ雲あり"
+		weather_img_tmp = "03"
+	}
+	if weather_number_tmp = 803 {
+		weather_about_tmp = "曇り"
+		weather_tmp = "ちぎれ雲"
+		weather_img_tmp = "04"
+	}
+	if weather_number_tmp = 804 {
+		weather_about_tmp = "曇り"
+		weather_tmp = ""
+		weather_img_tmp = "04"
+	}
+	
+	if weather_number_tmp = 900 {
+		weather_about_tmp = "竜巻"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 901 {
+		weather_about_tmp = "熱帯暴風雨"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 902 {
+		weather_about_tmp = "ハリケーン"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 903 {
+		weather_about_tmp = "寒い"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 904 {
+		weather_about_tmp = "暑い"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 905 {
+		weather_about_tmp = "強風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 906 {
+		weather_about_tmp = "雹"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	
+	if weather_number_tmp = 951 {
+		weather_about_tmp = "無風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 952 {
+		weather_about_tmp = "軽風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 953 {
+		weather_about_tmp = "軟風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 954 {
+		weather_about_tmp = "和風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 955 {
+		weather_about_tmp = "疾風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 956 {
+		weather_about_tmp = "雄風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 957 {
+		weather_about_tmp = "強風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 958 {
+		weather_about_tmp = "大嵐"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 959 {
+		weather_about_tmp = "強烈な風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 960 {
+		weather_about_tmp = "暴風"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 961 {
+		weather_about_tmp = "激しい嵐"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	if weather_number_tmp = 962 {
+		weather_about_tmp = "ハリケーン"
+		weather_tmp = ""
+		weather_img_tmp = ""
+	}
+	
+	return
+	
+/*----------------------------------------------------------------地域設定-------------------------------------------------------------------*/
 	
 *Set_City
 	gosub *Draw_Umbrella_Background
@@ -39,220 +593,133 @@
 *Set_City_2
 	clrobj
 	
+	En_City_name = ""
+	
 	gosub *Draw_Umbrella_Background
 	
 	color 128, 128, 128
+	pos 250, 80 : mes "お住いの地域を英語名で入力してください。\n例:東京 → Tokyo\n\n重複する場合はカンマで区切って\n都道府県名、市町村名、国名などを入力してください。\n例:青森県横浜町→Yokohama, Aomori  神奈川県横浜市→Yokohama, Kanagawa"
 	
-	pos 250, 80 : mes "お住いの国を選択してください。"
+	objsize 430, 20
+	pos 250, 250 : input En_City_name
 	
-	notesel countries
-	noteadd "日本", 0, 1
-	noteadd "アイスランド", 1, 1
-	noteadd "アイルランド", 2, 1
-	noteadd "アメリカ合衆国", 3, 1
-	noteadd "アラブ首長国連邦", 4, 1
-	noteadd "アルゼンチン", 5, 1
-	noteadd "イギリス", 6, 1
-	noteadd "イスラエル", 7, 1
-	noteadd "イタリア", 8, 1
-	noteadd "イラク", 9, 1
-	noteadd "イラン", 10, 1
-	noteadd "インド", 11, 1
-	noteadd "インドネシア", 12, 1
-	noteadd "ウクライナ", 13, 1
-	noteadd "エジプト", 14, 1
-	noteadd "エストニア", 15, 1
-	noteadd "エチオピア", 16, 1
-	noteadd "オーストラリア", 17, 1
-	noteadd "オーストリア", 18, 1
-	noteadd "オランダ", 19, 1
-	noteadd "カザフスタン", 20, 1
-	noteadd "カナダ", 21, 1
-	noteadd "キューバ", 22, 1
-	noteadd "ギリシャ", 23, 1
-	noteadd "クロアチア", 24, 1
-	noteadd "コンゴ民主共和国", 25, 1
-	noteadd "サウジアラビア", 26, 1
-	noteadd "ジャマイカ", 27, 1
-	noteadd "ジョージア", 28, 1
-	noteadd "シリア", 29, 1
-	noteadd "シンガポール", 30, 1
-	noteadd "ジンバブエ", 31, 1
-	noteadd "スイス", 32, 1
-	noteadd "スペイン", 33, 1
-	noteadd "スリランカ", 34, 1
-	noteadd "タイ", 35, 1
-	noteadd "大韓民国", 36, 1
-	noteadd "タンザニア", 37, 1
-	noteadd "中華人民共和国", 38, 1
-	noteadd "朝鮮民主主義人民共和国", 39, 1
-	noteadd "チリ", 40, 1
-	noteadd "デンマーク", 41, 1
-	noteadd "ドイツ", 42, 1
-	noteadd "トルコ", 43, 1
-	noteadd "ナイジェリア", 44, 1
-	noteadd "ニュージーランド", 45, 1
-	noteadd "ネパール", 46, 1
-	noteadd "ノルウェー", 47, 1
-	noteadd "パキスタン", 48, 1
-	noteadd "ハンガリー", 49, 1
-	noteadd "バングラデシュ", 50, 1
-	noteadd "フィリピン", 51, 1
-	noteadd "フィンランド", 52, 1
-	noteadd "ブラジル", 53, 1
-	noteadd "フランス", 54, 1
-	noteadd "ブルガリア", 55, 1
-	noteadd "ベトナム", 56, 1
-	noteadd "ベラルーシ", 57, 1
-	noteadd "ペルー", 58, 1
-	noteadd "ベルギー", 59, 1
-	noteadd "ポーランド", 60, 1
-	noteadd "ボスニア・ヘルツェゴビナ", 61, 1
-	noteadd "ポルトガル", 62, 1
-	noteadd "マダガスカル", 63, 1
-	noteadd "マリ", 64, 1
-	noteadd "マルタ", 65, 1
-	noteadd "マレーシア", 66, 1
-	noteadd "南アフリカ共和国", 67, 1
-	noteadd "ミャンマー", 68, 1
-	noteadd "メキシコ", 69, 1
-	noteadd "モルドバ", 70, 1
-	noteadd "モロッコ", 71, 1
-	noteadd "モンゴル", 72, 1
-	noteadd "ヨルダン", 73, 1
-	noteadd "ラオス", 74, 1
-	noteadd "リトアニア", 75, 1
-	noteadd "リビア", 76, 1
-	noteadd "ルーマニア", 77, 1
-	noteadd "ロシア", 78, 1
+	objsize 50, 20
+	pos 250+430, 250 : button gosub "参照", *open_ref
 	
-	objsize 200, 20
-	pos 400, 150 : combox country_num, 0, countries
+	objsize 50, 30
+	pos 250+430, 350 : button gosub "確認", *check_on_map
 	
 	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
 	pos 450, 400 : button "次へ", *Set_City_3
 	
+	cei = 0
+	
+	repeat
+		if En_City_name != "" {
+			check_url = "http://api.openweathermap.org/data/2.5/weather?q="+En_City_Name+"&mode=xml&appid=025b4afa1884c9d2df25f32bc8b2db91"
+	
+			#include "hspinet.as"
+	
+			alloc buf,1024*1024
+			
+			netinit
+	
+			neturl check_url
+	
+			netdlname "System/Computer/C@Drive/walls/umbrella/check.tmp"			;	ダウンロード後のファイル名
+			netrequest ""
+	
+			repeat
+				netexec res
+				if res : break
+				await 50
+			loop
+		
+			netterm
+	
+			notesel check_tmp
+			noteload "System/Computer/C@Drive/walls/umbrella/check.tmp"
+	
+			check__city_id = get_chapter(check_tmp, "city id", "=\"", "\"")
+			check__name = get_chapter(check_tmp, "name", "=\"", "\"")
+			check__country = get_chapter(check_tmp, "country", ">", "</")
+	
+			check__longitude = get_chapter(check_tmp, "lon", "=\"", "\"")
+			check__latitude = get_chapter(check_tmp, "lat", "=\"", "\"")
+	
+			color 239, 239, 239 : boxf 250, 300, 800, 300+100
+	
+			if instr(check_tmp, 0, "ClientError") != -1 {
+				if cei < 10 {
+					color 128, 128, 128
+					pos 250, 300 : mes "検索中..."
+					cei ++
+	
+				} else {
+					color 128, 128, 128
+					pos 250, 300 : mes "都市が見つかりませんでした"
+					cei ++
+	
+				}
+				
+			} else {
+				cei = 0
+				
+				color 128, 128, 128
+				pos 250, 300 : mes "国 : "+check__country+"\n都市名 : "+check__name+"\nCity ID : "+check__city_id+"\n緯度 : "+check__latitude+"\n経度 : "+check__longitude+"
+			}
+		}
+		wait 10
+	loop
+	
 	stop
+	
+*open_ref
+	exec "https://openweathermap.org/weathermap?basemap=map&cities=true&layer=temperature&lat=30&lon=-20&zoom=3", 16
+	return
+	
+*check_on_map
+	exec "http://maps.google.com/maps?q="+check__latitude+","+check__longitude+"", 16
+	return
 	
 *Set_City_3
-	clrobj
-	
-	gosub *Draw_Umbrella_Background
-	
-	color 128, 128, 128
-	
-	notesel countries
-	noteget Selected_Country, country_num
-	
-	notesel cities_data
-	noteload ""+Computer_Pass+"/C@Drive/walls/umbrella/cities.wal"
-	
-	cities_in_the_country_tmp = get_chapter(cities_data, ""+Selected_Country+"", " {", "}")
-	notemax_tmp = notemax
-	
-	cities_in_the_country = ""
-	En_cities_in_the_country = ""
-	i = -1
-	
-	repeat notemax_tmp
-		notesel cities_in_the_country_tmp
-		noteget cities_in_the_country_tmp_tmp, cnt
-	
-		if cities_in_the_country_tmp_tmp != "" {
-			i++
-			getstr new_cities_in_the_country_tmp, cities_in_the_country_tmp_tmp, 0, ','
-			getstr En_cities_in_the_country_tmp, cities_in_the_country_tmp_tmp, instr(cities_in_the_country_tmp_tmp, 0, ", ")+2, ';'
-			
-			notesel En_cities_in_the_country
-			noteadd En_cities_in_the_country_tmp, i, 1
-	
-			cities_in_the_country += ""+new_cities_in_the_country_tmp+"\n"
-		}
-	loop
-	
-	pos 250, 80 : mes "お住いの地域を選択してください。"
-	
-	objsize 200, 20
-	pos 400, 150 : combox city_num, 0, cities_in_the_country
-	
-	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
-	pos 450, 400 : button "次へ", *Set_City_3_Save
-	
-	stop
-	
-*Set_City_3_Save
-	if Selected_Country = "日本" or Selected_Country = "アメリカ合衆国" or Selected_Country = "イギリス" or Selected_Country = "カナダ" {
-		goto *Set_City_3_2
-	
-	} else {
-		notesel En_cities_in_the_country
-		noteget selected_En_cities_in_the_country, city_num
-		
-		notesel umbrella_config
-		noteadd "default = \""+selected_En_cities_in_the_country+"\";", 0, 1
-		
-		notesave ""+Computer_Pass+"/C@Drive/user/"+registered_user(user_num)+"/umbrella_config.wal"
-	
-		goto *Set_City_4
+	if En_City_name = "" {
+		dialog "都市名を入力してください"
+		stop
 	}
 	
-*Set_City_3_2
 	clrobj
 	
 	gosub *Draw_Umbrella_Background
 	
-	notesel En_cities_in_the_country
-	noteget selected_En_cities_in_the_country, city_num
-	
-	notesel cities_data_2
-	noteload ""+Computer_Pass+"/C@Drive/walls/umbrella/cities_"+Selected_Country+".wal"
-	
-	cities_in_the_country_2_tmp = get_chapter(cities_data_2, ""+selected_En_cities_in_the_country+"", " {", "}")
-	notemax_tmp = notemax
-	
-	cities_in_the_country_2 = ""
-	En_cities_in_the_country_2 = ""
-	i = -1
-	
-	repeat notemax_tmp
-		notesel cities_in_the_country_2_tmp
-		noteget cities_in_the_country_2_tmp_tmp, cnt
-	
-		if cities_in_the_country_2_tmp_tmp != "" {
-			i++
-			getstr new_cities_in_the_country_2_tmp, cities_in_the_country_2_tmp_tmp, 0, ','
-			getstr En_cities_in_the_country_2_tmp, cities_in_the_country_2_tmp_tmp, instr(cities_in_the_country_2_tmp_tmp, 0, ", ")+2, ';'
-			
-			notesel En_cities_in_the_country_2
-			noteadd En_cities_in_the_country_2_tmp, i, 1
-	
-			cities_in_the_country_2 += ""+new_cities_in_the_country_2_tmp+"\n"
-		}
-	loop
+	register_city_name = check__name
 	
 	color 128, 128, 128
+	pos 250, 80 : mes "表示する際に用いる都市名を入力してください。\n例:Tokyo → 東京"
 	
-	pos 250, 80 : mes "お住いの地域を選択してください。"
-	
-	city_num_2 = 0
-	
-	objsize 200, 20
-	pos 400, 150 : combox city_num_2, 0, cities_in_the_country_2
+	objsize 480, 20
+	pos 250, 150 : input register_city_name
 	
 	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
-	pos 450, 400 : button "次へ", *Set_City_3_2_Save
+	pos 450, 400 : button "次へ", *Set_City_4
 	
 	stop
 	
-*Set_City_3_2_Save
-	notesel En_cities_in_the_country_2
-	noteget selected_En_cities_in_the_country_2, city_num_2
-	
+*Set_City_4
 	notesel umbrella_config
-	noteadd "default = \""+selected_En_cities_in_the_country_2+"\";", 0, 1
+	noteadd "* "+register_city_name+", "+check__city_id+"", 0, 1
 	
 	notesave ""+Computer_Pass+"/C@Drive/user/"+registered_user(user_num)+"/umbrella_config.wal"
 	
-	goto *Set_City_4
 	
-*Set_City_4
+	clrobj
+	
+	gosub *Draw_Umbrella_Background
+	
+	color 128, 128, 128
+	pos 250, 80 : mes "地域設定が完了しました。"
+	
+	objimage 36, 0, 0, 0, 0, 0, 30 : objsize 100, 30
+	pos 450, 400 : button "ホーム画面へ", *loading_umbrella_config
+	
+	stop
