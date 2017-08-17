@@ -1,5 +1,5 @@
 ; Walls Luxor Buffer.hsp
-	total_buffer_things = 57			; 読み込み画像数（新しい画像ファイルを増やしたら必ずこの値も増やすこと！）
+	total_buffer_things = 61			; 読み込み画像数（新しい画像ファイルを増やしたら必ずこの値も増やすこと！）
 	
 	now_sourcecode = "buffer.hsp"		; 現在読み込んでいるソースコード
 	
@@ -56,6 +56,7 @@
 	noteadd "icons/desktop_screen/pc.png", 27, 1		; マイコンピュータ
 	noteadd "icons/desktop_screen/setting.png", 28, 1	; 設定
 	noteadd "icons/desktop_screen/umbrella.png", 37, 1	; Umbrella
+	noteadd "icons/desktop_screen/sentences.png", 61, 1	; Sentences
 	
 //設定で使うアイコン
 	noteadd "icons/settings/main.png", 29, 1			; メインメニュー
@@ -87,6 +88,11 @@
 	noteadd "umbrella/Bg_Thunderstorms.jpg", 55, 1		; 背景画像 : 雷
 	noteadd "umbrella/Bg_Snow.jpg", 56, 1				; 背景画像 : 雪
 	noteadd "umbrella/Bg_Haze.jpg", 57, 1				; 背景画像 : 霧
+	
+//Sentences（メモ帳）で使うアイコン
+	noteadd "icons/sentences/new_file.png", 58, 1		; 新規作成
+	noteadd "icons/sentences/open.png", 59, 1			; 開く
+	noteadd "icons/sentences/save.png", 60, 1			; 保存
 	
 //ボタン
 	noteadd "buttons/button_gray_and_blue.png", 36, 1	; ボタン（常時グレー/マウスオーバー時青）
